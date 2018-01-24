@@ -17,7 +17,7 @@ typedef stringstream sstream;
 
 template <typename Tdata>
 void quicksort(vector<Tdata> data, int lowerbound, int upperbound) { 
-    if (lowerbound >= upperbound || upperbound < lowerbound) {
+    if (upperbound <= lowerbound || lowerbound > upperbound) {
         return;
     }
     int size = (upperbound - lowerbound) + 1;
