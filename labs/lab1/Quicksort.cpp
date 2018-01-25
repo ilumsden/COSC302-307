@@ -4,11 +4,12 @@
 #include <iomanip>
 #include <vector>
 #include <cstdlib>
-#include <ctime>
+#include <algorithm>
 
 using namespace std;
 
 int width = 0;
+int c = 0;
 
 typedef stringstream sstream;
 
@@ -17,29 +18,50 @@ typedef stringstream sstream;
 
 template <typename Tdata>
 void quicksort(vector<Tdata> data, int lowerbound, int upperbound) { 
-    if (upperbound <= lowerbound || lowerbound > upperbound) {
+    if (upperbound <= lowerbound) {
+	    c++;
+	    cout << "Run " << c << ": Pindex=NA" << "\n";
+	    for (int i = 0; i < data.size(); i++) {
+            cout << data[i] << "\n";
+	    }
+	    cout << "\n";
         return;
     }
     int size = (upperbound - lowerbound) + 1;
+	if (size < 3) {
+		if (data[lowerbound+1] < data[lowerbound]) {
+            swap(data[lowerbound+1], data[lowerbound]);
+		}
+	    c++;
+	    cout << "Run " << c << ": Pindex=NA" << "\n";
+	    for (int i = 0; i < data.size(); i++) {
+            cout << data[i] << "\n";
+	    }
+	    cout << "\n";
+		return;
+	}
     int pindex = rand() % size + lowerbound;
+	int tmp = pindex;
     Tdata pivot = data[pindex];
-    Tdata tmp = data[upperbound];
-    data[upperbound] = data[pindex];
-    data[pindex] = tmp;
+	swap(data[pindex], data[upperbound]);
     int i = lowerbound - 1;
     int j = upperbound;
     while (1) {
         while (data[++i] < pivot) { }
 	while (pivot < data[--j]) { }
-	if (i>=j) break;
-	tmp = data[j];
-	data[j] = data[i];
-	data[i] = tmp;
+	if (i>=j) {
+    break;
+	}
+	swap(data[i], data[j]);
     }
     pindex = i;
-    tmp = data[upperbound];
-    data[upperbound] = data[pindex];
-    data[pindex] = tmp;
+	swap(data[pindex], data[upperbound]);
+	c++;
+	cout << "Run " << c << ": Pindex=" << tmp << "\n";
+	for (int i = 0; i < data.size(); i++) {
+        cout << data[i] << "\n";
+	}
+	cout << "\n";
     quicksort(data, lowerbound, pindex-1);
     quicksort(data, pindex+1, upperbound);
     return;
@@ -135,7 +157,7 @@ void printlist(ptiter p1, ptiter p2) {
 }
 
 int main(int argc, char *argv[]) {
-    // perform command-line check 
+    // Part B, Vers. 1: perform command-line check 
 
     vector<person_t> A;
 
@@ -148,11 +170,10 @@ int main(int argc, char *argv[]) {
     int k0 = 0;
     int k1 = N-1;
 
-    // if given as command-line arguments,
+    // Part B: if given as command-line arguments,
     // update k0, k1 and apply quickselect
     // to partition A accordingly
-    srand(time(NULL));
-    quicksort(A, k0, k1);
+	quicksort(A, k0, k1);
 
     printlist(A.begin(), A.end());
 }
