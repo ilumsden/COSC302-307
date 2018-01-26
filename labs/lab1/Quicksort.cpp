@@ -8,60 +8,61 @@
 
 using namespace std;
 
+/* Quicksort.cpp
+ * Author: Ian Lumsden
+ * Date: January 25, 2018
+ *
+ * The code in this file reads text from the console (the text is
+ * actually stored in files, but it is read in through the console).
+ * It then stores the personal data from the console in a vector of
+ * `person_t` objects. This vector is then sorted using an overloaded
+ * less-than operator for the person_t class and a custom quicksort algorithm
+ * that randomly selects a pivot. Finally, this code prints the sorted
+ * contents of the list with specific formatting.
+ */
+
 int width = 0;
-int c = 0;
 
 typedef stringstream sstream;
 
+// Quickselect is for Part B
 // template <typename Tdata>
 // void quickselect(...) { write this }
 
+/* This function implements a quicksort algorithm with
+ * random pivot selection to sort a vector of data.
+ */
 template <typename Tdata>
-void quicksort(vector<Tdata> data, int lowerbound, int upperbound) { 
+void quicksort(vector<Tdata> &data, int lowerbound, int upperbound) { 
+    /* If the current partition contains one or fewer
+     * elements, this branch of recursion is ended
+     * without doing anything.
+     */
     if (upperbound <= lowerbound) {
-	    c++;
-	    cout << "Run " << c << ": Pindex=NA" << "\n";
-	    for (int i = 0; i < data.size(); i++) {
-            cout << data[i] << "\n";
-	    }
-	    cout << "\n";
         return;
     }
+    /* `size` is the size of the current partition
+     * and is used to control the random selection
+     * of the pivot. Once the pivot is selected,
+     * its data is stored in a variable for future use,
+     * and it is swapped with the element at `upperbound`.
+     */
     int size = (upperbound - lowerbound) + 1;
-	if (size < 3) {
-		if (data[lowerbound+1] < data[lowerbound]) {
-            swap(data[lowerbound+1], data[lowerbound]);
-		}
-	    c++;
-	    cout << "Run " << c << ": Pindex=NA" << "\n";
-	    for (int i = 0; i < data.size(); i++) {
-            cout << data[i] << "\n";
-	    }
-	    cout << "\n";
-		return;
-	}
     int pindex = rand() % size + lowerbound;
-	int tmp = pindex;
     Tdata pivot = data[pindex];
-	swap(data[pindex], data[upperbound]);
+    swap(data[pindex], data[upperbound]);
     int i = lowerbound - 1;
     int j = upperbound;
     while (1) {
         while (data[++i] < pivot) { }
 	while (pivot < data[--j]) { }
 	if (i>=j) {
-    break;
+            break;
 	}
 	swap(data[i], data[j]);
     }
     pindex = i;
-	swap(data[pindex], data[upperbound]);
-	c++;
-	cout << "Run " << c << ": Pindex=" << tmp << "\n";
-	for (int i = 0; i < data.size(); i++) {
-        cout << data[i] << "\n";
-	}
-	cout << "\n";
+    swap(data[pindex], data[upperbound]);
     quicksort(data, lowerbound, pindex-1);
     quicksort(data, pindex+1, upperbound);
     return;
