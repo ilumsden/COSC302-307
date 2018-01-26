@@ -51,8 +51,18 @@ void quicksort(vector<Tdata> &data, int lowerbound, int upperbound) {
     int pindex = rand() % size + lowerbound;
     Tdata pivot = data[pindex];
     swap(data[pindex], data[upperbound]);
+    /* `i` and `j` are used to perform the next set of partitioning.
+     * `i` is set to loweroubnd-1 to force the "right" progression to start
+     * at the element at lowerbound. `j` is set to upperbound to force
+     * the "left" progression to start at the element at upperbound-1.
+     */
     int i = lowerbound - 1;
     int j = upperbound;
+    /* This loop progresses `i` and `j` until the element at `i` is greater
+     * than the pivot and the element at `j` is less than the pivot.
+     * Then, if `i` is less than `j`, the elements at `i` and `j` are swapped.
+     * Otherwise, the loop is exited.
+     */
     while (1) {
         while (data[++i] < pivot) { }
 	while (pivot < data[--j]) { }
@@ -61,6 +71,9 @@ void quicksort(vector<Tdata> &data, int lowerbound, int upperbound) {
 	}
 	swap(data[i], data[j]);
     }
+    /* The pivot is moved into its sorted position. Then, this algorithm is
+     * applied again to the left and right partitions.
+     */
     pindex = i;
     swap(data[pindex], data[upperbound]);
     quicksort(data, lowerbound, pindex-1);
@@ -68,12 +81,15 @@ void quicksort(vector<Tdata> &data, int lowerbound, int upperbound) {
     return;
 }
 
+// The class to store the data read from the console.
 class person_t {
     public:
+        // This is a default constructor for the class.
         person_t() { }
         bool operator<(const person_t &) const;
         friend istream & operator>>(istream &, person_t &);
         friend ostream & operator<<(ostream &, const person_t &);
+        // `strwidth` stores the size of the string "lastname firstname"
 	int strwidth;
     private:
         void set_strwidth();
@@ -82,7 +98,18 @@ class person_t {
         string phonenum;
 }; 
 
+// This is an overloaded less-than operator for the person_t class
+// that is used by the quicksort function to order the data.
 bool person_t::operator<(const person_t &rhs) const {
+    /* This function will return true if the left hand side's (LHS's) lastname
+     * is less than the right hand side's (RHS's). If they are equal, this
+     * function will then return true if the LHS's firstname is less than
+     * the RHS's. If both the firstnames and lastnames are equal, the function
+     * will return true if the LHS's phonenum is less than the RHS's. If any
+     * of these check result in the LHS's value being greater than the RHS's,
+     * the function will return false. Alternatively, if the two person_t objects
+     * are equal, the function will also return false.
+     */
     if (lastname < rhs.lastname) {
         return true;
     }
@@ -99,36 +126,42 @@ bool person_t::operator<(const person_t &rhs) const {
     return false;
 }
 
+// This function sets the `strwidth` member of the person_t class.
 void person_t::set_strwidth() {
     strwidth = lastname.size() + firstname.size() + 1;
     return;
 }
 
+// This function stores data given by an `istream` object into a person_t object.
 istream & operator>>(istream &in, person_t &r) { 
+    /* `line` is a string used to get the desired line of text
+     * from the `istream` object. `s` is the stringsteam object
+     * used to extract individual words from `line`. The `word` variables
+     * are the strings used to store the words extracted by `s`.
+     */ 
     string line;
-    string word;
+    string word1, word2, word3;
     sstream s;
-    int i;
+    /* This code extracts the desired line from the console. Then,
+     * that line is fed into a stringstream, which is used to store
+     * the three desired "words" in the correct variables.
+     */
     getline(in, line);
     s.str(line);
-    i = 0;
-    while (s >> word) {
-        if (i == 0) {
-            r.firstname = word;
-	}
-	else if (i == 1) {
-            r.lastname = word;
-	}
-	else {
-            r.phonenum = word;
-	}
-	i++;
-    }
+    s >> word1 >> word2 >> word3;
+    /* The string members of the person_t object are set using the 
+     * "words" obtained from the stringstream.
+     */
+    r.firstname = word1;
+    r.lastname = word2;
+    r.phonenum = word3;
     s.str();
+    // This call is used to set the last member (`strwidth`) of the perso_t object.
     r.set_strwidth();
     return in;
 }
 
+// This function prints the data in a person_t object with the desired formatting.
 ostream & operator<<(ostream &out, const person_t &r) {
     out << r.lastname << " " << r.firstname << "       ";
     out << setw(width - r.strwidth) << right << r.phonenum;
@@ -136,6 +169,10 @@ ostream & operator<<(ostream &out, const person_t &r) {
 }
 
 typedef vector<person_t>::iterator ptiter;
+/* This function sets the global `width` variable by
+ * determining the largest `strwidth` member of the
+ * elements in the vector and adding 20 to the largest.
+ */
 void setwidth(ptiter p1, ptiter p2) { 
     while (p1 != p2) {
         if (p1->strwidth > width) {
@@ -147,6 +184,9 @@ void setwidth(ptiter p1, ptiter p2) {
     return;
 }
 
+/* This function is a driver for printing the contents
+ * of a vector<person_t> object.
+ */
 void printlist(ptiter p1, ptiter p2) {
     ptiter tmp = p1;
     setwidth(tmp, p2);
@@ -160,12 +200,18 @@ void printlist(ptiter p1, ptiter p2) {
 int main(int argc, char *argv[]) {
     // Part B, Vers. 1: perform command-line check 
 
+    /* This code stores the data passed from the
+     * console in the vector<person_t> object `A`.
+     */
     vector<person_t> A;
 
     person_t din;
     while (cin >> din)
         A.push_back(din);
   
+    /* The size of vector `A` is used to set the initial
+     * bounds for the quicksort algorithm.
+     */
     int N = (int)A.size();
 
     int k0 = 0;
@@ -174,7 +220,12 @@ int main(int argc, char *argv[]) {
     // Part B: if given as command-line arguments,
     // update k0, k1 and apply quickselect
     // to partition A accordingly
-	quicksort(A, k0, k1);
+
+    /* The quicksort() function is called to sort the contents of
+     * `A`. Then, the contents of `A` are printed to the console
+     * using the printlist() function.
+     */ 
+    quicksort(A, k0, k1);
 
     printlist(A.begin(), A.end());
 }
