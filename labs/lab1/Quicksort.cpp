@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdlib>
 #include <algorithm>
+#include <ctime>
 
 using namespace std;
 
@@ -22,12 +23,43 @@ using namespace std;
  */
 
 int width = 0;
+int c = 0;
 
 typedef stringstream sstream;
 
-// Quickselect is for Part B
-// template <typename Tdata>
-// void quickselect(...) { write this }
+template <typename Tdata>
+void quickselect(vector<Tdata> &data, int lowerbound, int k, int upperbound) {
+    while (1) {        
+        if (upperbound <= lowerbound) {
+            return;
+        }
+        int size = (upperbound - lowerbound) + 1;
+        int pindex = rand() % size + lowerbound;
+        Tdata pivot = data[pindex];
+        swap(data[pindex], data[upperbound]);
+        int i = lowerbound - 1;
+        int j = upperbound;
+        while (1) {
+            while (data[++i] < pivot) { }
+	        while (j-1 >= 0 && pivot < data[--j]) { }
+	        if (i>=j) {
+                break;
+	        }
+	        swap(data[i], data[j]);
+        }
+        pindex = i;
+        swap(data[pindex], data[upperbound]);
+		if (pindex == k) {
+            return;
+		}
+		if (k < pindex) {
+            upperbound = pindex - 1;
+		}
+		else {
+            lowerbound = pindex + 1;
+		}
+	}
+}
 
 /* This function implements a quicksort algorithm with
  * random pivot selection to sort a vector of data.
@@ -65,7 +97,7 @@ void quicksort(vector<Tdata> &data, int lowerbound, int upperbound) {
      */
     while (1) {
         while (data[++i] < pivot) { }
-	while (pivot < data[--j]) { }
+	while (j-1 >= 0 && pivot < data[--j]) { }
 	if (i>=j) {
             break;
 	}
@@ -198,7 +230,21 @@ void printlist(ptiter p1, ptiter p2) {
 }
 
 int main(int argc, char *argv[]) {
-    // Part B, Vers. 1: perform command-line check 
+	if (argc == 2 || argc > 3) {
+        cerr << "Usage: ./Quicksort or ./Quicksort Lowerbound(Int) Upperbound(Int)\n";
+		return -1;
+	}
+
+	int lower, upper;
+	if (argc == 3) {
+        lower = atoi(argv[1]);
+		if (lower < 0) {
+            cerr << "Usage: ./Quicksort or ./Quicksort Lowerbound(Int) Upperbound(Int)\n";
+			cerr << "The provided Lowerbound is not valid.\n";
+			return -2;
+		}
+		upper = atoi(argv[2]);
+	}
 
     /* This code stores the data passed from the
      * console in the vector<person_t> object `A`.
@@ -208,24 +254,31 @@ int main(int argc, char *argv[]) {
     person_t din;
     while (cin >> din)
         A.push_back(din);
+
+    if (upper > A.size()) {        
+        cerr << "Usage: ./Quicksort or ./Quicksort Lowerbound(Int) Upperbound(Int)\n";
+        cerr << "The provided Upperbound is not valid.\n";
+        return -3;
+	}
   
     /* The size of vector `A` is used to set the initial
      * bounds for the quicksort algorithm.
      */
     int N = (int)A.size();
-
-    int k0 = 0;
-    int k1 = N-1;
-
-    // Part B: if given as command-line arguments,
-    // update k0, k1 and apply quickselect
-    // to partition A accordingly
+	srand(time(NULL));
 
     /* The quicksort() function is called to sort the contents of
      * `A`. Then, the contents of `A` are printed to the console
      * using the printlist() function.
      */ 
-    quicksort(A, k0, k1);
+    if (argc == 1) {
+        quicksort(A, 0, N-1);
+	}
+	else {
+        quickselect(A, 0, lower, N-1);
+		quickselect(A, lower, upper, N-1);
+		quicksort(A, lower, upper);
+	}
 
     printlist(A.begin(), A.end());
 }
