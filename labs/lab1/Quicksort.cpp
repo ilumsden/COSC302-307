@@ -23,7 +23,6 @@ using namespace std;
  */
 
 int width = 0;
-int c = 0;
 
 typedef stringstream sstream;
 
@@ -219,11 +218,17 @@ void setwidth(ptiter p1, ptiter p2) {
 /* This function is a driver for printing the contents
  * of a vector<person_t> object.
  */
-void printlist(ptiter p1, ptiter p2) {
+void printlist(ptiter p1, ptiter p2, int lower, int upper) {
     ptiter tmp = p1;
     setwidth(tmp, p2);
+	int c = -1;
     while (p1 != p2) {
-        cout << *p1 << endl;
+        cout << *p1;
+		c++;
+		if (c >= lower && c <= upper) {
+            cout << " **";
+		}
+		cout << "\n";
 	++p1;
     }
     return;
@@ -255,7 +260,7 @@ int main(int argc, char *argv[]) {
     while (cin >> din)
         A.push_back(din);
 
-    if (upper > A.size()) {        
+    if (upper >= A.size()) {        
         cerr << "Usage: ./Quicksort or ./Quicksort Lowerbound(Int) Upperbound(Int)\n";
         cerr << "The provided Upperbound is not valid.\n";
         return -3;
@@ -280,5 +285,5 @@ int main(int argc, char *argv[]) {
 		quicksort(A, lower, upper);
 	}
 
-    printlist(A.begin(), A.end());
+    printlist(A.begin(), A.end(), lower, upper);
 }
