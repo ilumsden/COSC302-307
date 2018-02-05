@@ -81,7 +81,7 @@ void quickselect(vector<Tdata> &data, int lowerbound, int k, int upperbound) {
 	    swap(data[i], data[j]);
         }
         /* Once partitioning is finished, the pivot is moved to the final
-	 * index that i reached.
+	     * index that i reached.
          */
         pindex = i;
         swap(data[pindex], data[upperbound]);
