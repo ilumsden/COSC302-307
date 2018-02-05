@@ -6,27 +6,75 @@
 
 using namespace std;
 
+/* Sort_slist.cpp
+ * Author: Ian Lumsden
+ * Date: February 5, 2018
+ *
+ * The code in this file reads text from the console (the text
+ * is actually stored in files, but it is read through the console).
+ * It then stores the personal data from the console into a
+ * single-linked list of person_t objects. Then, using a smart
+ * pointer subclass, the linked list is sorted by making a vector of
+ * smart pointers that point to list elements. This vector is then
+ * sorted and used to sort the list of data. Finally, this code prints
+ * the sorted contents of the list with specific foratting.
+ */
+
+// This global variable is used to set formatting.
 int width = 0;
 
 typedef stringstream sstream;
 
-// template <typename T>
+/* This class defines the single-linked
+ * list object used to store the data.
+ */
 template <class T>
 class slist {
     private:
+        /* This struct defines the nodes that
+         * make up the linked list.
+         */
         struct node {
+            /* The default constructor for the node object.
+             * It sets members data and next to their default
+             * values.
+             */
             node() { data = T(); next = NULL; }
+            /* The copy constructor for the node object.
+             * It sets the data member with the parameter passed.
+             * It also sets next to its default value.
+             */
             node(const T &key) { data = key; next = NULL; }
+            /* This less-than operator for node objects is used
+             * by the smart pointer object to allow for comparison
+             * and sorting.
+             */
             bool operator<(const node &rhs) const { return (data < rhs.data); }
 
             T data;
             node *next;
         };
 
+        /* This class defines the smart pointers that will be used
+         * to sort the contents of the list.
+         */
         class sptr {
             public:
+                /* The smart pointer constructor.
+                 * If a parameter is passed, the member
+                 * pointer (ptr) is set using that parameter.
+                 * Otherwise, ptr is set to NULL.
+                 */
                 sptr(node *_ptr=NULL) { ptr = _ptr; }
+                /* This less-than operator is directly used to compare
+                 * smart pointers and sort the linked list. When called,
+                 * it will use pointer dereferencing to call the node 
+                 * comparison operator.
+                 */
                 bool operator<(const sptr &rhs) const { return (*ptr < *rhs.ptr); }
+                /* This overloaded dereference operator converts the
+                 * smart pointer object into a T* pointer.
+                 */
                 operator node * () const { return ptr; }
             private:
                 node *ptr;
