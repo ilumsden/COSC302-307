@@ -33,75 +33,75 @@ typedef stringstream sstream;
  */
 template <typename Tdata>
 void quickselect(vector<Tdata> &data, int lowerbound, int k, int upperbound) {
-	/* This while loop ensures that the algorithm is repeated
-	 * until the element at index "k" is at its sorted position.
-	 * It is used in favor of recursion.
-	 */
+    /* This while loop ensures that the algorithm is repeated
+     * until the element at index "k" is at its sorted position.
+     * It is used in favor of recursion.
+     */
     while (1) {        
-		/* If the size of the data considered is less than or
-		 * equal to 0, the function will simply return. This
-		 * should (hopefully) never happen, but it is included
-		 * as a precaution.
-		 */
+        /* If the size of the data considered is less than or
+         * equal to 0, the function will simply return. This
+         * should (hopefully) never happen, but it is included
+         * as a precaution.
+         */
         if (upperbound <= lowerbound) {
             return;
         }
-		/* This pivot is determined. Then, the value stored at
-		 * pindex is saved for later use, and the element at
-		 * pindex is swapped with the element at upperbound.
-		 */
+        /* This pivot is determined. Then, the value stored at
+         * pindex is saved for later use, and the element at
+         * pindex is swapped with the element at upperbound.
+         */
         int size = (upperbound - lowerbound) + 1;
         int pindex = rand() % size + lowerbound;
         Tdata pivot = data[pindex];
         swap(data[pindex], data[upperbound]);
-		/* `i` and `j` are used as the bounds for the
-		 * quicksort-style partitioning performed in this
-		 * interior while loop.
-		 */
+        /* `i` and `j` are used as the bounds for the
+         * quicksort-style partitioning performed in this
+         * interior while loop.
+         */
         int i = lowerbound - 1;
         int j = upperbound;
-		/* This loop carries out a quicksort-style partitioning
-		 * of the data between i and j. More specifically, it will
-		 * increase i until the element at i is greater than or
-		 * equal to the pivot. Similarly, it will decrease j until
-		 * it is less than or equal to the pivot. Then, if i >= j,
-		 * the loop will break. Otherwise, the element at i will be
-		 * swapped with the element at j.
-		 */
+        /* This loop carries out a quicksort-style partitioning
+         * of the data between i and j. More specifically, it will
+         * increase i until the element at i is greater than or
+         * equal to the pivot. Similarly, it will decrease j until
+         * it is less than or equal to the pivot. Then, if i >= j,
+         * the loop will break. Otherwise, the element at i will be
+         * swapped with the element at j.
+         */
         while (1) {
             while (data[++i] < pivot) { }
-			/* The `j-1 >= 0` statement is used to ensure the access
-			 * operation in the second half of the condition does not
-			 * cause an error for accessing data outside of data.
-			 */
-	        while (j-1 >= 0 && pivot < data[--j]) { }
-	        if (i>=j) {
+            /* The `j-1 >= 0` statement is used to ensure the access
+             * operation in the second half of the condition does not
+             * cause an error for accessing data outside of data.
+             */
+            while (j-1 >= 0 && pivot < data[--j]) { }
+	    if (i>=j) {
                 break;
-	        }
-	        swap(data[i], data[j]);
+	    }
+	    swap(data[i], data[j]);
         }
-		/* Once partitioning is finished, the pivot is moved to the final
-		 * index that i reached.
-		 */
+        /* Once partitioning is finished, the pivot is moved to the final
+	 * index that i reached.
+         */
         pindex = i;
         swap(data[pindex], data[upperbound]);
-		/* If the pivot's index is k, the element is in its
-		 * sorted location, and the function is exited.
-		 * Otherwise, if pindex > k, this algorithm will be
-		 * repeated on the elements with indicies less than pindex.
-		 * If pindex < k, this algorithm will be repeated on the
-		 * elements with indices greater than pindex.
-		 */
-		if (pindex == k) {
+        /* If the pivot's index is k, the element is in its
+         * sorted location, and the function is exited.
+         * Otherwise, if pindex > k, this algorithm will be
+         * repeated on the elements with indicies less than pindex.
+         * If pindex < k, this algorithm will be repeated on the
+         * elements with indices greater than pindex.
+         */
+        if (pindex == k) {
             return;
-		}
-		if (k < pindex) {
+        }
+        if (k < pindex) {
             upperbound = pindex - 1;
-		}
-		else {
+        }
+        else {
             lowerbound = pindex + 1;
-		}
-	}
+        }
+    }
 }
 
 /* This function implements a quicksort algorithm with
@@ -274,32 +274,32 @@ void printlist(ptiter p1, ptiter p2) {
 }
 
 int main(int argc, char *argv[]) {
-	/* If there are more than 2 or exactly 1 user-provided 
-	 * command-line arguments, an error message will be produced
-	 * showing the correct usage of the executable from the command line.
-	 * Then, the program will be ended.
-	 */
-	if (argc == 2 || argc > 3) {
+    /* If there are more than 2 or exactly 1 user-provided 
+     * command-line arguments, an error message will be produced
+     * showing the correct usage of the executable from the command line.
+     * Then, the program will be ended.
+     */
+    if (argc == 2 || argc > 3) {
         cerr << "Usage: ./Quicksort or ./Quicksort Lowerbound(Int) Upperbound(Int)\n";
-		return -1;
-	}
+	return -1;
+    }
 
-	int lower, upper;
-	/* If there are 2 user-provided command-line arguments,
-	 * this block of code will convert them to integers and save them
-	 * in the variables lower and upper. If lower < 0, then lower has an
-	 * invalid value (because it is an index). So, the corresponding error
-	 * message is printed to the console before ending the program.
-	 */
-	if (argc == 3) {
+    int lower, upper;
+    /* If there are 2 user-provided command-line arguments,
+     * this block of code will convert them to integers and save them
+     * in the variables lower and upper. If lower < 0, then lower has an
+     * invalid value (because it is an index). So, the corresponding error
+     * message is printed to the console before ending the program.
+     */
+    if (argc == 3) {
         lower = atoi(argv[1]);
-		if (lower < 0) {
+	if (lower < 0) {
             cerr << "Usage: ./Quicksort or ./Quicksort Lowerbound(Int) Upperbound(Int)\n";
-			cerr << "The provided Lowerbound is not valid.\n";
-			return -2;
-		}
-		upper = atoi(argv[2]);
+	    cerr << "The provided Lowerbound is not valid.\n";
+	    return -2;
 	}
+	upper = atoi(argv[2]);
+    }
 
     /* This code stores the data passed from the
      * console in the vector<person_t> object `A`.
@@ -310,37 +310,37 @@ int main(int argc, char *argv[]) {
     while (cin >> din)
         A.push_back(din);
 
-	/* If upper >= the size of the vector of data, then upper has an
-	 * invalid value. So, the corresponding error message is printed
-	 * to the console before ending the program.
-	 */
+    /* If upper >= the size of the vector of data, then upper has an
+     * invalid value. So, the corresponding error message is printed
+     * to the console before ending the program.
+     */
     if (argc == 3 && upper >= A.size()) {        
         cerr << "Usage: ./Quicksort or ./Quicksort Lowerbound(Int) Upperbound(Int)\n";
         cerr << "The provided Upperbound is not valid.\n";
         return -3;
-	}
+    }
   
     int N = (int)A.size();
-	srand(time(NULL));
+    srand(time(NULL));
 
-	/* If there were no user-provided command-line arguments,
-	 * the quicksort function is called on the entire vector of data
-	 * to sort it. Otherwise (i.e. if there were 2 user-provided
-	 * command-line arguments), the quickselect function is called
-	 * twice to put the elements at lower and upper in there sorted
-	 * positions (see above for more info). Then, the quicksort function
-	 * is called to sort the data between lower and upper.
-	 */
+    /* If there were no user-provided command-line arguments,
+     * the quicksort function is called on the entire vector of data
+     * to sort it. Otherwise (i.e. if there were 2 user-provided
+     * command-line arguments), the quickselect function is called
+     * twice to put the elements at lower and upper in there sorted
+     * positions (see above for more info). Then, the quicksort function
+     * is called to sort the data between lower and upper.
+     */
     if (argc == 1) {
         quicksort(A, 0, N-1);
-	}
-	else {
+    }
+    else {
         quickselect(A, 0, lower, N-1);
-		quickselect(A, lower, upper, N-1);
-		quicksort(A, lower, upper);
-	}
+	quickselect(A, lower, upper, N-1);
+	quicksort(A, lower, upper);
+    }
 
-	// Finally, the data is printed to the console.
+    // Finally, the data is printed to the console.
     printlist(A.begin(), A.end());
-	return 0;
+    return 0;
 }
