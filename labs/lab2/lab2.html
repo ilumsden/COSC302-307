@@ -1,0 +1,155 @@
+<title> CS302 -- Lab Assignment 2</title>
+<style> p.page { page-break-after: always; } </style>
+
+<h1> CS302 -- Lab Assignment 2 (75 pts: Spring, 2018)</h1>
+
+<hr>
+<h3>Getting motivated</h3>
+In this lab you will continue sorting the multi-column
+data from Lab 1 which consisted of
+a firstname, a lastname, and a phone number.
+The difference is that data will
+now be stored in single linked list.
+In order to allow sorting by means of the std::sort algorithm 
+(or any of the array based sort algoriths developed in class),
+you will embed the smart pointer concept within the single linked 
+list class and write the associated code for setting things up
+and applying the result.
+<p>
+
+<hr>
+<h3>Lab submission and due date</h3>
+Submit your work via Canvas no later than
+9:59am Monday February 12, 2018.
+You only submit the Sort_sptr.cpp file. The incremental
+development outlined below is merely intended to make
+solving the problem more manageable.
+<p>
+
+<hr>
+
+<h3>Getting started and what you need to do</h3>
+
+To help you get started,
+run the Hydra script
+/home/cs302/labs/lab2/copy to obtain the following files: 
+Sort_sptr.cpp (skeleton code), sort_sptr (Hydra solution
+executable), and a makefile. 
+Your job is to write the missing source code which must
+behave as described next.
+Use the data files from Lab 1.
+<p>
+
+Develop your code incrementally.
+Sort_sptr.cpp must always contain ALL code needed to 
+satisfy this lab. 
+You will work with multi-file assignments in later labs.
+<p>
+
+<UL>
+
+<LI>
+Get a copy of the Quicksort.cpp file you submitted
+for Lab 1.
+Update Sort_sptr.cpp to include the definition of 
+class person_t including
+the associated input and output operators.
+Also copy and add the no-argument command-line check
+as well as the template based printlist function.
+Write the missing slist::node::constructor that
+takes a data argument; 
+this functionality is needed by slist::push_back() 
+when it creates a new node.
+Include header files and
+do whatever else it takes for the code to compile 
+(shouldn't be much), then test and make sure you can 
+read and write data from the lists provided.
+<p>
+
+<LI>
+Add an overloaded less-than comparison operator
+to the node subclass.
+Embed the smart pointer code as a private slist subclass; 
+copy the code verbatim from the smartpointer_handout,
+then modify it to explicitly work for slist::node data.
+<p>
+
+Update the slist::sort() function to sort the 
+single linked list data using the std::sort() function.
+Determine the number of elements stored in the list.
+Allocate a vector of smart pointers of that size
+called Ap.
+Initialize the individual smart pointers 
+to point to the list nodes. 
+For example, if p = head, then Ap[0] = p-&gt;next, etc.
+Apply std::sort
+and use the sorted Ap vector to relink the list nodes.
+Do not simply repeat the array based
+rearrangement covered in class which used pointers
+to the data itself. Here, the smart pointers point
+to nodes that hold the data.
+Also, keep in mind that operator[] is not available. 
+You will need to use list node pointers.
+When the sorting is done, step through the smart 
+pointer vector while creating the linked list. 
+For example, if p = head, then p-&gt;next = Ap[0], etc.
+Simple as that (once you figure it out). You may
+want to draw a picture of what's going on to
+help visualize the process.
+<p>
+
+</UL>
+<hr>
+
+<!-- <p class="page"></p> -->
+<h3>Example runs based on list1.txt</h3>
+<pre>
+unix> cat list1.txt
+
+CANDACE WITT        	250-939-5404
+THEODORE PERKINS    	723-668-3397
+THAD HULL           	708-807-6757
+STEPHAN SALAZAR     	415-413-5058
+ISRAEL WILKINS      	938-701-1455
+BRUCE PERRY         	540-916-2956
+VALENTIN RIVERS     	726-204-2377
+WILFRED JOHNSTON    	582-126-8861
+JORDAN WILKINS      	938-701-1455
+LEVI SPENCE         	985-365-7415
+KAYLA NGUYEN        	484-322-1527
+
+unix> ./sort_slist < list1.txt
+
+HULL THAD               708-807-6757
+JOHNSTON WILFRED        582-126-8861
+NGUYEN KAYLA            484-322-1527
+PERKINS THEODORE        723-668-3397
+PERRY BRUCE             540-916-2956
+RIVERS VALENTIN         726-204-2377
+SALAZAR STEPHAN         415-413-5058
+SPENCE LEVI             985-365-7415
+WILKINS ISRAEL          938-701-1455
+WILKINS JORDAN          938-701-1455
+WITT CANDACE            250-939-5404
+
+</pre>
+<hr>
+<h3>Grading rubric</h3>
+
+Note1: Output format of your program must MATCH 
+that of the solution executable.
+Use the diff command to compare.
+<br> 
+Note2: If your program does not compile, 
+it will likely not be graded and instead assigned a default score of 0.
+
+<h4> Sort_list (75)</h4>
+<pre>
+10: Base code for reading and writing listX.txt files and storing data in an slist.
+15: Embedded smart pointer subclass with explicit application to slist::node data. 
+50: Function slist::sort which creates smart pointer array, sorts it using std::sort,
+    and applies results to relink slist nodes in sorted order.
+</pre>
+
+<hr>
+Mon Jan 29 19:51:31 EST 2018

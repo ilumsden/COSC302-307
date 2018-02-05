@@ -1,0 +1,242 @@
+<title> CS302 -- Lab Assignment 1</title>
+<style> p.page { page-break-after: always; } </style>
+
+<h1> CS302 -- Lab Assignment 1 (150 pts: Spring, 2018)</h1>
+
+<hr>
+<h3>Getting motivated</h3>
+Welcome to your first CS302 lab which consists of two parts that
+both focus on sorting. 
+In Part A,
+you implement a variant of the quicksort algorithm 
+described in class and use it to sort multi-column data consisting of
+a firstname, a lastname, and a phone number 
+(all made up, but you knew that). 
+In Part B,
+you make the program take optional commandline arguments that cause
+it to sort elements in a given range. 
+This extension will be based on a modified version 
+of the quickselect algorithm.
+<p>
+
+<hr>
+<h3>Lab submission and due date</h3>
+Your friendly TAs will tell you how to submit your work to Canvas.
+Do not email your code to the instructor or the TAs as they cannot 
+upload the code to Canvas for you.
+<p>
+
+Part A is due 9:59am Monday January 29, 2018.
+Part B is due 9:59am Monday February 5, 2018.
+You only submit one file each time. The incremental
+development outlined below is merely intended to make
+solving the problem more manageable. 
+<p>
+
+Part A will only be graded in a cursory manner. 
+The code must compile and produce the correct output. 
+A quick look will determine if the proper algorithm is applied. 
+You will not receive feedback if there is a problem. 
+The point is merely to ensure that you are making progress.
+Part B will be graded using the rubric listed below. 
+This includes all the Part A code and functionality. 
+If you aren't confident Part A is written correctly,
+see a TA in lab or during their office hours.
+<p>
+
+<hr>
+
+<h3>Getting started and what you need to do</h3>
+
+To help you get started,
+run the Hydra script
+/home/cs302/labs/lab1/copy to obtain the following files:
+Quicksort.cpp (skeleton code), quicksort (Hydra solution
+executable), list1.txt-list3.txt (data files),
+and a makefile.
+Your job is to write the missing source code which must
+behave as described next.
+<p>
+
+Develop your code in stages as described next.
+Quicksort.cpp must contain ALL code needed to
+first satisfy Part A.
+You then update it to also satisfy Part B.
+You will work with multi-file assignments in later labs.
+<p>
+
+<UL>
+
+<LI>
+Part A Vers. 1: Use your favorite editor to modify Quicksort.cpp 
+as follows. Update the quicksort() function to accept the arguments
+indicated in the main() function, namely, a vector reference and
+two integers. Leave the function body empty. For now, quicksort()
+is merely a stub. Focus instead on adding the code for the input 
+and output operators associated with the person_t class 
+which has three private
+data members: firstname, lastname, and phonenumber. 
+The input operator simply reads each of these every time it is
+called.
+The output operator prints each person_t object using 
+the format: lastname firstname phonenumber. 
+See examples below. Part of the assignment is for to figure out
+how to maintain a fixed width if the name field so that all
+phonenumbers are left justified to the same column position.
+Finally, add the printlist() function from the arraylist_handout
+modified to print to stdout instead of a named file, and do
+whatever else is needed to make the program compile such as
+adding missing header files. Then test and make sure it
+reads and writes the person_t data as required.
+<p>
+
+<LI>
+Part A Vers. 2: Add an overloaded operator&lt; for the person_t class 
+so you can impose an order on such objects. Test that it works by
+having the main() function use std::sort before writing the list
+content to stdout. When you are satisfied that this works,
+replace std::sort with a modified quicksort algorithm.
+That is, instead of the median-of-three partition algorithm you
+saw in class and used in HW2, 
+randomly pick an index in the left-to-right
+range and use it to partition the data.
+This new version forces you to think about how the median-of-three
+code works as it must explicitly check and prevent going out-bounds 
+during the search for data pairs to swap. 
+To make you think even more about the
+algorithm, merge all the functionality into the quicksort()
+function. That is, do not have an external function that carries
+out the partitioning. Keep it all in one function that gets called
+from the main() function.
+Test and compare the output with what you obtained using std::sort. 
+The two output should be identical since they use the same comparison
+operator.
+<p>
+
+This completes Part A. Submit Quicksort.cpp on Canvas after you have
+cleaned it up and added a few comments.
+<p>
+
+<LI>
+Part B Vers. 1: In preparation for the quickselect based sublist
+sorting, add command-line argument checks and processing. 
+The basic version takes no arguments and executes the code from Part 
+A. However, if two integers are provided, they specify the range of 
+the array to be sorted, say k1 to k2. You must check that the program is being
+executed in one of these two modes. For the second mode, you must
+convert the two command-line arguments into integers. Hint: the
+atoi() function from the C standard library (cstdlib) can do the job.
+<p>
+
+<LI>
+Part B Vers. 2: Copy the quickselect() function from the sorting3
+handout. Embed the random pivot based partition code that you
+added to quicksort() in Part A. The function will take four
+arguments, e.g. quickselect(A, left, k, right) where A is a data
+array, left and right designate the first and the last indices
+to consider (the range), and k the element that needs to be
+selected (found and put in its proper place).
+Make whatever other modifications
+are needed to get the code to compile. 
+Test the program to make sure you the selection is correct.
+<p>
+
+<p>
+Use quickselect(A, 0, k0, N-1) to put the k0-th element in its
+proper location and partition the data in A accordingly;
+
+Then
+use quickselect(A, k0, k1, N-1) to put the k1-th element in its
+proper location and partition the data in A accordingly. Note
+that data indexed below k0 is ignored at this point. When this
+works, use the quicksort() function to sort the data in the 
+k0-k1 range.
+<p>
+
+This completes Part B. Submit Quicksort.cpp on Canvas after you have
+cleaned it up and added a few comments.
+<p>
+
+</UL>
+<hr>
+
+<!-- <p class="page"></p> -->
+<h3>Example runs based on list1.txt</h3>
+<pre>
+unix> cat list1.txt
+CANDACE WITT        	250-939-5404
+THEODORE PERKINS    	723-668-3397
+THAD HULL           	708-807-6757
+STEPHAN SALAZAR     	415-413-5058
+ISRAEL WILKINS      	938-701-1455
+BRUCE PERRY         	540-916-2956
+VALENTIN RIVERS     	726-204-2377
+WILFRED JOHNSTON    	582-126-8861
+JORDAN WILKINS      	938-701-1455
+LEVI SPENCE         	985-365-7415
+KAYLA NGUYEN        	484-322-1527
+
+unix> ./quicksort < list1.txt 
+HULL THAD               708-807-6757       0
+JOHNSTON WILFRED        582-126-8861       1
+NGUYEN KAYLA            484-322-1527       2
+PERKINS THEODORE        723-668-3397       3
+PERRY BRUCE             540-916-2956       4
+RIVERS VALENTIN         726-204-2377       5
+SALAZAR STEPHAN         415-413-5058       6
+SPENCE LEVI             985-365-7415       7
+WILKINS ISRAEL          938-701-1455       8
+WILKINS JORDAN          938-701-1455       9
+WITT CANDACE            250-939-5404       10
+
+unix> ./quicksort 3 6 < list1.txt
+HULL THAD               708-807-6757       0
+NGUYEN KAYLA            484-322-1527       1
+JOHNSTON WILFRED        582-126-8861       2
+PERKINS THEODORE        723-668-3397       3 **
+PERRY BRUCE             540-916-2956       4 **
+RIVERS VALENTIN         726-204-2377       5 **
+SALAZAR STEPHAN         415-413-5058       6 **
+SPENCE LEVI             985-365-7415       7
+WILKINS ISRAEL          938-701-1455       8
+WILKINS JORDAN          938-701-1455       9
+WITT CANDACE            250-939-5404       10
+</pre>
+
+The line numbers added to right for the last output are for illustrational purposes 
+and not produced by the program. They help you see that the data in lines 3-6 is sorted
+(by design), that the data lines 1-2 is not, and that the data in lines 0, 7-10 is 
+(by chance).
+
+<hr>
+
+<h3>Grading rubric</h3>
+
+Note1: Output format of your program must MATCH
+that of the solution executable. Use diff command to compare.
+<br>
+Note2: If your program does not compile,
+it will likely not be graded and instead assigned a default score of 0.
+
+<h4> Quicksort Part A (25)</h4>
+<pre>
+25: Base code compiles and produces the correct output when executed.
+</pre>
+
+You cannot reclaim lost points from Part A but can fix your code
+and get full points for functionality and implemention in Part B.
+
+<h4> Quicksort Part B (125) </h4>
+<pre>
+20: person_t: operator>> and operator<< 
+10: person_t: operator< 
+20: quicksort: random pivot, while-loop safety guard(s)
+20: quicksort: integrated partitioning
+20: quickselect: random pivot, integrated partitioning, while-loop safety guard(s)
+10: Command-line argument processing: optional k1, k2 pair extraction and use
+15: Output matches solution code output exactly
+10: Goldielocks comments: not too many, not too few -- just the right amount
+</pre>
+
+<hr>
+Tue Jan 16 23:42:03 EST 2018
