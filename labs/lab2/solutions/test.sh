@@ -7,5 +7,7 @@ for input in *.txt ; do
         echo Programs did not produce same output for $input
     else
         echo Programs produced the same output for all inputs.
+        rm $input.out1
+        rm $input.out2
     fi
 done
