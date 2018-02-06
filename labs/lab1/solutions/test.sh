@@ -16,7 +16,7 @@ done
 # Two argument testing
 ./quicksort 3 6 < list1.txt > list1.txt.out.in1
 ./Quicksort 3 6 < list1.txt > list1.txt.out.in2
-if diff list1.txt.out.in1 list1.txt.out.in2 > /dev/null ; then
+if diff <(sed -n '4,7p' list1.txt.out.in1) <(sed -n '4,7p' list1.txt.out.in2) > /dev/null ; then
     echo Programs did not produce the same output for list1.txt with 2 arguments
 else
     echo Programs produced the same output with 2 arguments.
@@ -25,7 +25,7 @@ else
 fi
 ./quicksort 200 413 < list2.txt > list2.txt.out.in1
 ./Quicksort 200 413 < list2.txt > list2.txt.out.in2
-if diff list2.txt.out.in1 list2.txt.out.in2 > /dev/null ; then
+if diff <(sed -n '201,414p' list2.txt.out.in1) <(sed -n '201,414p' list2.txt.out.in2) > /dev/null ; then
     echo Programs did not produce the same output for list2.txt with 2 arguments
 else
     echo Programs produced the same output with 2 arguments.
@@ -34,7 +34,7 @@ else
 fi
 ./quicksort 1027 1593 < list3.txt > list3.txt.out.in1
 ./Quicksort 1027 1593 < list3.txt > list3.txt.out.in2
-if diff list3.txt.out.in1 list3.txt.out.in2 > /dev/null ; then
+if diff <(sed -n '1028,1594p' list3.txt.out.in1) <(sed -n '1028,1594p' list3.txt.out.in2) > /dev/null ; then
     echo Programs did not produce the same output for list3.txt with 2 arguments
 else
     echo Programs produced the same output with 2 arguments.
