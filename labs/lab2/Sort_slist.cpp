@@ -81,6 +81,9 @@ class slist {
         };
 
     public:
+        /* An iterator class for easily navigating the linked list.
+         * This code was provided and, thus, will not be commented.
+         */
         class iterator {
             public:
                 iterator() { p = NULL; }
@@ -104,16 +107,31 @@ class slist {
         iterator end() { return iterator(NULL); }
 
     private:
+        /* `head` is a pointer to the head node of the linked list.
+         * This node does not contain any meaningful data besides a pointer
+         * to the first meaningful element. `tail` is a pointer to the last
+         * element in the list. It will contain data, but it's `next` pointer
+         * is NULL.
+         */ 
         node *head;
         node *tail;
 };
 
+/* The linked list constructor.
+ * It creates a new node for the head, and then it
+ * sets tail so that it points to head.
+ */
 template <typename T>
 slist<T>::slist() {
     head = new node();
     tail = head;
 }
 
+/* The linked list deconstructor.
+ * It goes through the list and deletes elements until
+ * there are none remaining. Then, it deletes `head` and
+ * sets head and tail to NULL.
+ */
 template <typename T>
 slist<T>::~slist() {
     while (head->next != NULL) {
@@ -127,14 +145,26 @@ slist<T>::~slist() {
     tail = NULL;
 }
 
+/* The function for adding a new element to the end of the list.
+ * It creates a new node, adds it after tail, and sets tail to
+ * point to this new node.
+ */
 template <typename T>
 void slist<T>::push_back(const T &din) {
     tail->next = new node(din);
     tail = tail->next;
 }
 
+/* The function for sorting the contents of the linked list.
+ * It creates a vector of smart pointers. Then, it uses the 
+ * std::sort algorithm to sort this vector. Finally, it uses
+ * the sorted smart pointer vector to sort the list.
+ */
 template <typename T>
 void slist<T>::sort() {
+    /* These iterators and this while loop are used to simply
+     * determine the size of the linked list.
+     */
     iterator i = begin();
     iterator j = end();
     int size = 0;
@@ -142,19 +172,33 @@ void slist<T>::sort() {
         size++;
         ++i;
     }
+    /* `Ap` is the vector of smart pointers that will be sorted.
+     * It has the same size as the linked list.
+     */
     vector<sptr> Ap;
     Ap.resize(size);
+    /* The smart pointers in Ap are initialized such that the smart
+     * pointer at index k points to the list element at index k.
+     */
     node *p = head;
     for (int k = 0; k < size; k++) {
         Ap[k] = p->next;
         p = p->next;
     }
+    // The smart pointer vector is sorted using std::sort.
     std::sort(Ap.begin(), Ap.end());
+    /* The elements of the linked list are relinked in order by
+     * setting the next pointers of the nodes using the smart 
+     * pointers in `Ap`.
+     */
     p = head;
     for (int k = 0; k < size; k++) {
         p->next = Ap[k];
         p = p->next;
     }
+    /* `tail` is explicitly set to point to the last element to
+     * avoid infinite looping.
+     */
     tail = p;
     tail->next = NULL;
     return;
@@ -278,17 +322,27 @@ void printlist(ptiter p1, ptiter p2) {
 }
 
 int main(int argc, char *argv[]) {
+    /* If there are any user-defined command-line arguments,
+     * an error message is thrown to tell the user how to use the
+     * executable.
+     */
     if (argc > 1) {
         cerr << "Usage: ./Sort_sptr (No arguments)\n";
         return -1;
     }
+    /* A linked list of person_t objects is created and filled
+     * with content from stdin.
+     */
     slist<person_t> A;
 
     person_t din;
     while (cin >> din)
         A.push_back(din);
 
+    // The linked list sort function is called to sort the data.
     A.sort();
 
+    // The contents of the list are printed to the console.
     printlist(A.begin(), A.end());
+    return 0;
 }

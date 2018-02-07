@@ -6,7 +6,7 @@ for input in *.txt ; do
     if diff $input.out1 $input.out2 > /dev/null ; then
         echo Programs did not produce same output for $input
     else
-        echo Programs produced the same output for all inputs.
+        echo Programs produced the same output for $input.
         rm $input.out1
         rm $input.out2
     fi
