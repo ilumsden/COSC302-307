@@ -1,6 +1,6 @@
 # COSC 307: Honors Data Structures and Algorithms II
 
-This is my personal repository for storing my solutions to homework and labs for COSC 302 at the University of Tennessee, Knoxville. This repository is **not** to be used for getting answers to assignments for this course. However, anyone may use supplimentary material, such as shell scripts for testing code or input files for labs, that can be found in this repository.
+This is my personal repository for storing my solutions to homework and labs for COSC 302 at the University of Tennessee, Knoxville. This repository is **not** to be used for getting answers to assignments for this course. However, you're more than welcome to use supplimentary material, such as shell scripts for testing code or input files for labs, that can be found in this repository.
 
 ## Labs
 
