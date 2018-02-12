@@ -36,7 +36,6 @@ void ppm::read(string fname)
     int n = 3;
     uchar buffer[n];
     int nread_total, nread;
-    int i = 0;
     int j = 0;
     RGB **imgdata = image.data();
     while (1)

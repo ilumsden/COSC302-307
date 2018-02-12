@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -14,7 +15,7 @@ void set_pixel_list(vector<pixel> &pixlist, ppm &img)
     {
         for (int j = 0; j < ncols; j+=2)
         {
-            pixlist.pushback(pixel(i, j));
+            pixlist.push_back(pixel(i, j));
         }
     }
     return;
@@ -26,44 +27,124 @@ void encode(ppm &img)
     set_pixel_list(pixlist, img);
     int row, col;
     int i = 0;
+    int s = 0;
     int color = 0;
     while (1)
     {
         char c = cin.get();
         if (c == cin.eof())
+        {            
+            while (s < 8)
+            {
+                row = pixlist[i].row;
+                col = pixlist[i].col;
+                RGB *pix = img[row] + col;
+                if (color == 0)
+                {
+                    pix->R &= 0xFE;
+                    pix->R |= ((ETX >> s) & 0x1);
+                }
+                else if (color == 1)
+                {
+                    pix->G &= 0xFE;
+                    pix->G |= ((ETX >> s) & 0x1);
+                }
+                else
+                {
+                    pix->B &= 0xFE;
+                    pix->B |= ((ETX >> s) & 0x1);
+                }
+                i++;
+                color++;
+                if (color == 3)
+                {
+                    color = 0;
+                }
+                s++;
+            }
+            s = 0;
+            break;
+        }
+        while (s < 8)
+        {
+            row = pixlist[i].row;
+            col = pixlist[i].col;
+            RGB *pix = img[row] + col;
+            if (color == 0)
+            {
+                pix->R &= 0xFE;
+                pix->R |= ((c >> s) & 0x1);
+            }
+            else if (color == 1)
+            {
+                pix->G &= 0xFE;
+                pix->G |= ((c >> s) & 0x1);
+            }
+            else
+            {
+                pix->B &= 0xFE;
+                pix->B |= ((c >> s) & 0x1);
+            }
+            i++;
+            color++;
+            if (color == 3)
+            {
+                color = 0;
+            }
+            s++;
+        }
+        s = 0;
+    }
+    return;
+}
+
+void decode(ppm &img) 
+{
+    vector<pixel> pixlist; 
+    set_pixel_list(pixlist, img);
+    int row, col;
+    int i = 0;
+    int s = 0;
+    int color = 0;
+    char c = 0x00;
+    while (1)
+    {
+        while (s < 8)
+        {
+            row = pixlist[i].row;
+            col = pixlist[i].col;
+            RGB *pix = img[row] + col;
+            if (color == 0)
+            {
+                c = (((c >> s) & pix->R) << s); 
+            }
+            else if (color == 1)
+            {
+                c = (((c >> s) & pix->G) << s); 
+            }
+            else
+            {
+                c = (((c >> s) & pix->B) << s); 
+            }
+            i++;
+            color++;
+            if (color == 3)
+            {
+                color = 0;
+            }
+            s++;
+        }
+        s = 0;
+        if (c == ETX)
         {
             break;
         }
-        row = pixlist[i].row;
-        col = pixlist[i].col;
-        RGB *pix = img[row] + col;
-        if (color == 0)
-        {
-            pix->R &= 0xFE;
-            pix->R |= (c & 0x1);
-        }
-        else if (color == 1)
-        {
-            pix->G &= 0xFE;
-            pix->G |= (c & 0x1);
-        }
         else
         {
-            pix->B &= 0xFE;
-            pix->B |= (c & 0x1);
-        }
-        i++;
-        color++;
-        if (color == 3)
-        {
-            color = 0;
+            cout.put(c);
         }
     }
-}
-
-void decode(...) 
-{
-  write this
+    return;
 }
 
 int main(int argc, char *argv[]) 
