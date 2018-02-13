@@ -1,5 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <typeinfo>
 
 using namespace std;
 
@@ -19,14 +21,14 @@ void ppm::read(string fname)
     }
     char magicnum[2];
     fscanf(fp, "%s", magicnum);
-    if ("P6" != magicnum)
+    if (strcmp(magicnum, "P6") != 0)
     {
         fprintf(stderr, "%s is not the correct file type.\n", fname.c_str());
         exit(-2);
     }
     int nrows, ncols, maxpixval;
-    fscanf(fp, "%i %i", nrows, ncols);
-    fscanf(fp, "%i", maxpixval);
+    fscanf(fp, "%i %i", &nrows, &ncols);
+    fscanf(fp, "%i", &maxpixval);
     if (maxpixval != 255)
     {
         fprintf(stderr, "%s does not have the correct maximum pixel value.\n", fname.c_str());
@@ -34,14 +36,17 @@ void ppm::read(string fname)
     }
     image.assign(nrows, ncols);
     int n = 3;
-    uchar buffer[n];
+    char buffer[n];
     int nread_total, nread;
+    int i = 0;
     int j = 0;
-    RGB **imgdata = image.data();
     while (1)
     {
-        nread = fread(buffer, 1, n, fp);
+        nread = fread((char *)buffer, 1, n, fp);
         nread_total += nread;
+        fprintf(stdout, "buffer[0] = %c\n", buffer[0]);
+        fprintf(stdout, "buffer[1] = %c\n", buffer[1]);
+        fprintf(stdout, "buffer[2] = %c\n", buffer[2]);
         if (nread_total > 3 * nrows * ncols)
         {
             fprintf(stderr, "Number of elements in %s does not match the header data.\n", fname.c_str());
@@ -51,10 +56,17 @@ void ppm::read(string fname)
         {
             break;
         }
-        (*imgdata + j)->R = buffer[0];
-        (*imgdata + j)->G = buffer[1];
-        (*imgdata + j)->B = buffer[2];
+        fprintf(stdout, "Pre-assignment\n");
+        (image[i] + j)->R = buffer[0];
+        (image[i] + j)->G = buffer[1];
+        (image[i] + j)->B = buffer[2];
+        fprintf(stdout, "Post-assignment\n");
         j++;
+        if (j == ncols)
+        {
+            j = 0;
+            i++;
+        }
     } 
     if (nread_total != 3 * nrows * ncols)
     {
