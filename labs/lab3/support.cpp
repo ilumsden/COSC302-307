@@ -3,6 +3,7 @@
 #include <cstring>
 #include <iostream>
 #include <typeinfo>
+#include <libexplain/fread.h>
 
 using namespace std;
 
@@ -31,6 +32,7 @@ void ppm::read(string fname)
     }
     int nrows, ncols, maxpixval;
     fscanf(fp, "%i %i", &nrows, &ncols);
+    fprintf(stdout, "%i %i", nrows, ncols);
     fscanf(fp, "%i\n", &maxpixval);
     if (maxpixval != 255)
     {
@@ -44,21 +46,26 @@ void ppm::read(string fname)
     int nread_total = 0;
     int i = 0;
     int j = 0;
-    while (1)
-    {
+    //while (1)
+    //{
         nread = fread((char *)(image.data()), 1, 3*nrows*ncols, fp); 
         fprintf(stdout, "nread = %i\n",  nread);
+        if (ferror(fp))
+        {
+            fprintf(stdout, "There was a read error.\n");
+            fprintf(stdout, "Explanation: %s", explain_fread((char *)(image.data()), 1, 3*nrows*ncols, fp));
+        }
         nread_total += nread;
-        if (nread_total > 3 * nrows * ncols)
+        /*if (nread_total > 3 * nrows * ncols)
         {
             fprintf(stderr, "Number of elements in %s does not match the header data.\n", fname.c_str());
             fclose(fp);
             exit(-3);
-        }
-        if (nread == 0 && feof(fp))
+        }*/
+        /*if (nread == 0 && feof(fp))
         {
             break;
-        }
+        }*/
         /*fprintf(stdout, "buffer[0] = %c\n", buffer[0]);
         cout << "buffer[0] is a uchar: " << (typeid(buffer[0]) == typeid(uchar)) << endl;
         fprintf(stdout, "buffer[1] = %c\n", buffer[1]);
@@ -75,16 +82,16 @@ void ppm::read(string fname)
         fprintf(stdout, "Post-set for G.\n");
         (image[i] + j)->B = c;
         fprintf(stdout, "Post-set for B.\n");*/
-        j++;
+        /*j++;
         if (j == ncols)
         {
             j = 0;
             i++;
         }
-    } 
-    if (nread_total != 3 * nrows * ncols)
+    }*/ 
+    if (nread != 3 * nrows * ncols)
     {
-        fprintf(stderr, "Number of elements in %s does not match the header data.\n", fname.c_str());
+        fprintf(stderr, "Number of elements in %s does not match the header data. Should be %i\n", fname.c_str(), 3*nrows*ncols);
         fclose(fp);
         exit(-3);
     }
@@ -108,7 +115,7 @@ void ppm::write(string fname)
     RGB **buf = image.data();
     int nrows = get_Nrows();
     int ncols = get_Ncols();
-    fwrite(*buf, sizeof(RGB), sizeof(buf), fp);
+    fwrite(buf, sizeof(RGB), sizeof(buf), fp);
     /*for (int i = 0; i < nrows * ncols; i++)
     {
         fprintf(stdout, "Pre-data-write.\n");
