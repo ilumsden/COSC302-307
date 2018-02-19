@@ -169,14 +169,14 @@ int main(int argc, char *argv[])
     ppm img;
     img.read(fname);
 
-    /*if (strcmp(argv[1], "-encode") == 0)
+    if (strcmp(argv[1], "-encode") == 0)
     {
         encode(img);
     }
     else
     {
         decode(img);
-    }*/
+    }
 
     img.write(fname);
     return 0;

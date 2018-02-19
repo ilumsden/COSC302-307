@@ -16,7 +16,7 @@ class matrix
         int get_Nrows() const { return Nrows; }
         int get_Ncols() const { return Ncols; }
         T* operator[] (int i) { return buf[i]; }
-        T ** data() const { return &buf[0]; }
+        T * data() const { return buf[0]; }
     private:
         int Nrows, Ncols;
         T **buf;
@@ -44,7 +44,7 @@ void matrix<T>::assign(int n_Nrows, int n_Ncols)
     Ncols = n_Ncols;
     buf = new T *[Nrows];
     buf[0] = new T [Nrows*Ncols];
-    for (int i = 0; i < Nrows; i++)
+    for (int i = 1; i < Nrows; i++)
     {
         buf[i] = buf[i-1] + Ncols;
     }
@@ -66,6 +66,7 @@ class ppm
 {
     public:
         ppm() { ; }
+        ~ppm() { ; }
         void read(std::string fname);
         void write(std::string fname);
         RGB * operator[] (int i) { return image[i]; }
