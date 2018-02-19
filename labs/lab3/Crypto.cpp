@@ -105,28 +105,28 @@ void decode(ppm &img)
     set_pixel_list(pixlist, img);
     int row, col;
     int i = 0;
-    int s = 0;
+    int s;
     int color = 0;
     char c;
     while (1)
     {
         c = 0x00;
-        while (s < 8)
+        for (s = 0; s < 8; s++)
         {
             row = pixlist[i].row;
             col = pixlist[i].col;
             RGB *pix = img[row] + col;
             if (color == 0)
             {
-                c = (((c >> s) & 0xFE) | (pix->R & 0x1)) << s;
+                c |= ((pix->R & 0x1) << s);
             }
             else if (color == 1)
             {
-                c = (((c >> s) & 0xFE) | (pix->G & 0x1)) << s;
+                c |= ((pix->G & 0x1) << s);
             }
             else
             {
-                c = (((c >> s) & 0xFE) | (pix->B & 0x1)) << s;
+                c |= ((pix->B & 0x1) << s);
             }
             i++;
             color++;
@@ -134,9 +134,7 @@ void decode(ppm &img)
             {
                 color = 0;
             }
-            s++;
         }
-        s = 0;
         if (c == ETX)
         {
             break;
