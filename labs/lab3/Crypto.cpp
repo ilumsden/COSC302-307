@@ -29,40 +29,12 @@ void encode(ppm &img)
     int i = 0;
     int s = 0;
     int color = 0;
+    char c;
     while (1)
     {
-        char c = cin.get();
-        if (c == cin.eof())
-        {            
-            while (s < 8)
-            {
-                row = pixlist[i].row;
-                col = pixlist[i].col;
-                RGB *pix = img[row] + col;
-                if (color == 0)
-                {
-                    pix->R &= 0xFE;
-                    pix->R |= ((ETX >> s) & 0x1);
-                }
-                else if (color == 1)
-                {
-                    pix->G &= 0xFE;
-                    pix->G |= ((ETX >> s) & 0x1);
-                }
-                else
-                {
-                    pix->B &= 0xFE;
-                    pix->B |= ((ETX >> s) & 0x1);
-                }
-                i++;
-                color++;
-                if (color == 3)
-                {
-                    color = 0;
-                }
-                s++;
-            }
-            s = 0;
+        c = cin.get();
+        if (cin.eof())
+        {
             break;
         }
         while (s < 8)
@@ -95,6 +67,35 @@ void encode(ppm &img)
         }
         s = 0;
     }
+    c = ETX;
+    while (s < 8)
+    {
+        row = pixlist[i].row;
+        col = pixlist[i].col;
+        RGB *pix = img[row] + col;
+        if (color == 0)
+        {
+            pix->R &= 0xFE;
+            pix->R |= ((c >> s) & 0x1);
+        }
+        else if (color == 1)
+        {
+            pix->G &= 0xFE;
+            pix->G |= ((c >> s) & 0x1);
+        }
+        else
+        {
+            pix->B &= 0xFE;
+            pix->B |= ((c >> s) & 0x1);
+        }
+        i++;
+        color++;
+        if (color == 3)
+        {
+            color = 0;
+        }
+        s++;
+    }
     return;
 }
 
@@ -106,9 +107,10 @@ void decode(ppm &img)
     int i = 0;
     int s = 0;
     int color = 0;
-    char c = 0x00;
+    char c;
     while (1)
     {
+        c = 0x00;
         while (s < 8)
         {
             row = pixlist[i].row;
@@ -116,15 +118,15 @@ void decode(ppm &img)
             RGB *pix = img[row] + col;
             if (color == 0)
             {
-                c = (((c >> s) & pix->R) << s); 
+                c = (((c >> s) & 0xFE) | (pix->R & 0x1)) << s;
             }
             else if (color == 1)
             {
-                c = (((c >> s) & pix->G) << s); 
+                c = (((c >> s) & 0xFE) | (pix->G & 0x1)) << s;
             }
             else
             {
-                c = (((c >> s) & pix->B) << s); 
+                c = (((c >> s) & 0xFE) | (pix->B & 0x1)) << s;
             }
             i++;
             color++;
@@ -172,12 +174,12 @@ int main(int argc, char *argv[])
     if (strcmp(argv[1], "-encode") == 0)
     {
         encode(img);
+        img.write(fname);
+        return 0;
     }
     else
     {
         decode(img);
+        return 0;
     }
-
-    img.write(fname);
-    return 0;
 }
