@@ -1,10 +1,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <cerrno>
 #include <fstream>
 #include <iostream>
 #include <cassert>
+#include <algorithm>
+#include <functional>
 
 using namespace std;
 
@@ -73,4 +74,18 @@ void ppm::write(string fname)
     fp.write(buf, 3*nrows*ncols);
     fp.close();
     return;
+}
+
+void rnumgen::pdf(const vector<int> &v)
+{
+    F.resize(v.size());
+    partial_sum(v.begin(), v.end(), F.begin());
+    transform(F.begin(), F.end(), F.begin(), bind2nd(divides<float>(), *(F.end() - 1)));
+}
+
+int rnumgen::rand() const
+{
+    const float randnorm = RAND_MAX+1.0f;
+    const float p = (float)rand()/randnorm;
+    return upper_bound(F.begin(), F.end(), p) - F.begin();
 }

@@ -2,6 +2,8 @@
 #define __SUPPORT_H__
 
 #include <string>
+#include <vector>
+#include <cstdlib>
 
 typedef unsigned char uchar;
 extern const char ETX;
@@ -74,6 +76,16 @@ class ppm
         int get_Ncols() { return image.get_Ncols(); }
     private:
         matrix<RGB> image;
+};
+
+class rnumgen
+{
+    public:
+        rnumgen(int seed=0) { srand(seed); }
+        void pdf(const std::vector<int> &);
+        int rand() const;
+    private:
+        std::vector<float> F;
 };
 
 #endif
