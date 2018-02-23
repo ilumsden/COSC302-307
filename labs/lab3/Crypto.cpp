@@ -2,6 +2,7 @@
 #include <cstring>
 #include <iostream>
 #include <vector>
+#include <utility>
 
 using namespace std;
 
@@ -11,12 +12,29 @@ void set_pixel_list(vector<pixel> &pixlist, ppm &img)
 {
     int nrows = img.get_Nrows();
     int ncols = img.get_Ncols();
-    for (int i = 0; i < nrows; i+=2)
+    vector<int> hist;
+    int color = 0;
+    int i, j;
+    for (i = 0; i < nrows; i++)
     {
-        for (int j = 0; j < ncols; j+=2)
+        for (j = 0; j < ncols; j++)
         {
-            pixlist.push_back(pixel(i, j));
+            color = (img[i][j].R >> 4) << 8 | (img[i][j].G >> 4) << 4 | (img[i][j].B >> 4);
+            hist.push_back(color);
+            if (i % 2 == 0 && j % 2 == 0)
+            {
+                pixlist.push_back(pixel(i, j));
+            }
         }
+    }
+    rnumgen RNG(0);
+    RNG.pdf(hist);
+    int r1_12 = RNG.rand();
+    int r2_12 = RNG.rand();
+    int r24 = (r1_12 << 12) | r2_12;
+    for (i = (int)pixlist.size() - 1; i > 0; --i)
+    {
+        swap(pixlist[i], pixlist[r24 % (i+1)]);
     }
     return;
 }
@@ -27,7 +45,7 @@ void encode(ppm &img)
     set_pixel_list(pixlist, img);
     int row, col;
     int i = 0;
-    int s = 0;
+    int s;
     int color = 0;
     char c;
     while (1)
@@ -37,7 +55,7 @@ void encode(ppm &img)
         {
             break;
         }
-        while (s < 8)
+        for (s = 0; s < 8; s++)
         {
             row = pixlist[i].row;
             col = pixlist[i].col;
@@ -63,12 +81,10 @@ void encode(ppm &img)
             {
                 color = 0;
             }
-            s++;
         }
-        s = 0;
     }
     c = ETX;
-    while (s < 8)
+    for (s = 0; s < 8; s++)    
     {
         row = pixlist[i].row;
         col = pixlist[i].col;
@@ -94,7 +110,6 @@ void encode(ppm &img)
         {
             color = 0;
         }
-        s++;
     }
     return;
 }
