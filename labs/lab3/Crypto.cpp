@@ -3,12 +3,13 @@
 #include <iostream>
 #include <vector>
 #include <utility>
+#include <sstream>
 
 using namespace std;
 
 #include "support.h"
 
-void set_pixel_list(vector<pixel> &pixlist, ppm &img)
+void set_pixel_list(vector<pixel> &pixlist, ppm &img, int seed)
 {
     int nrows = img.get_Nrows();
     int ncols = img.get_Ncols();
@@ -19,7 +20,7 @@ void set_pixel_list(vector<pixel> &pixlist, ppm &img)
     {
         for (j = 0; j < ncols; j++)
         {
-            color = (img[i][j].R >> 4) << 8 | (img[i][j].G >> 4) << 4 | (img[i][j].B >> 4);
+            color = ((img[i][j].R >> 4) << 8) | ((img[i][j].G >> 4) << 4) | (img[i][j].B >> 4);
             hist.push_back(color);
             if (i % 2 == 0 && j % 2 == 0)
             {
@@ -27,7 +28,7 @@ void set_pixel_list(vector<pixel> &pixlist, ppm &img)
             }
         }
     }
-    rnumgen RNG(0);
+    rnumgen RNG(seed);
     RNG.pdf(hist);
     int r1_12 = RNG.rand();
     int r2_12 = RNG.rand();
@@ -39,22 +40,34 @@ void set_pixel_list(vector<pixel> &pixlist, ppm &img)
     return;
 }
 
-void encode(ppm &img)
+void encode(ppm &img, string key)
 {
     vector<pixel> pixlist;
-    set_pixel_list(pixlist, img);
+    set_pixel_list(pixlist, img, (int)key.length());
     int row, col;
     int i = 0;
     int s;
     int color = 0;
     char c;
+    char k = '\0';
+    stringstream stream(key); 
     while (1)
     {
-        c = cin.get();
+        if (key != "")
+        {
+            if (stream.eof())
+            {
+                stream.str(key);
+            }
+            k = stream.get();
+        }
         if (cin.eof())
         {
             break;
         }
+        fprintf(stdout, "pre-c = %c\n", c);
+        c = cin.get() ^ k;
+        fprintf(stdout, "c = %c\n\n", c);
         for (s = 0; s < 8; s++)
         {
             row = pixlist[i].row;
@@ -83,7 +96,7 @@ void encode(ppm &img)
             }
         }
     }
-    c = ETX;
+    c = ETX ^ k;
     for (s = 0; s < 8; s++)    
     {
         row = pixlist[i].row;
@@ -114,17 +127,27 @@ void encode(ppm &img)
     return;
 }
 
-void decode(ppm &img) 
+void decode(ppm &img, string key) 
 {
     vector<pixel> pixlist; 
-    set_pixel_list(pixlist, img);
+    set_pixel_list(pixlist, img, (int)key.length());
     int row, col;
     int i = 0;
     int s;
     int color = 0;
     char c;
+    char k = '\0';
+    stringstream stream(key);
     while (1)
     {
+        if (key != "")
+        {
+            if (stream.eof())
+            {
+                stream.str(key);
+            }
+            k = stream.get();
+        }
         c = 0x00;
         for (s = 0; s < 8; s++)
         {
@@ -150,6 +173,7 @@ void decode(ppm &img)
                 color = 0;
             }
         }
+        c = c ^ k;
         if (c == ETX)
         {
             break;
@@ -164,21 +188,28 @@ void decode(ppm &img)
 
 int main(int argc, char *argv[]) 
 {
-    if (argc < 3)
+    if (argc < 3 || argc > 4)
     {
-        fprintf(stderr, "Usage: ./Crypto -encode|decode image.ppm\n");
+        fprintf(stderr, "Usage: ./Crypto -encode|decode image.ppm or ./Crypto -encode|decode image.ppm -key=\"text\"\n");
         return -5;
     }
     if (strcmp(argv[1], "-encode") != 0 && strcmp(argv[1], "-decode") != 0)
     {
-        fprintf(stderr, "Usage: ./Crypto -encode|decode image.ppm\n");
+        fprintf(stderr, "Usage: ./Crypto -encode|decode image.ppm or ./Crypto -encode|decode image.ppm -key=\"text\"\n");
         return -6;
     }
     string fname = argv[2];
     if (fname.substr(fname.length() - 4) != ".ppm")
     {
-        fprintf(stderr, "Usage: ./Crypto -encode|decode image.ppm\n");
+        fprintf(stderr, "Usage: ./Crypto -encode|decode image.ppm or ./Crypto -encode|decode image.ppm -key=\"text\"\n");
         return -7;
+    }
+    string key = "";
+    if (argc == 4)
+    {
+        key = argv[3];
+        key = key.substr(6);
+        key = key.substr(key.length() - 1);
     }
 
     ppm img;
@@ -186,13 +217,13 @@ int main(int argc, char *argv[])
 
     if (strcmp(argv[1], "-encode") == 0)
     {
-        encode(img);
+        encode(img, key);
         img.write(fname);
         return 0;
     }
     else
     {
-        decode(img);
+        decode(img, key);
         return 0;
     }
 }

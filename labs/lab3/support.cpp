@@ -87,6 +87,6 @@ void rnumgen::pdf(const vector<int> &v)
 int rnumgen::rand() const
 {
     const float randnorm = RAND_MAX+1.0f;
-    const float p = (float)rand()/randnorm;
+    const float p = (float)std::rand()/randnorm;
     return upper_bound(F.begin(), F.end(), p) - F.begin();
 }
