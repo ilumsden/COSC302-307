@@ -1,5 +1,9 @@
+#define _USE_MATH_DEFINES
+
+#include <cmath>
 #include <cstdio>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 
@@ -36,28 +40,64 @@ istream & operator>>(istream &fin, city &place)
             break;
         }
     }
+    if (fin.eof())
+    {
+        return fin;
+    }
     sin.str(tmp);
-    sin >> place.zone >> place.name >> place.type >> place.latitude >> place.longitude;
+    float lati, longi;
+    sin >> place.zone >> place.name >> place.type >> lati >> longi;
     if (place.type != REG && place.type != GAT)
     {
         fprintf(stderr, "%s does not have a valid city type.\n", place.name.c_str());
         exit(-1);
     }
-    return;
+    lati = lait*(M_PI / 180);
+    longi = longi*(M_PI / 180);
+    place.latitude = lati;
+    place.longitude = longi;
+    return fin;
 }
 
-class dtable;
+ostream & operator<<(ostream &fout, city &place)
+{
+    float lati = place.latitude * (180/M_PI);
+    float longi = place.longitude * (180/M_PI);
+    fout << setw(20) << place.name << " "
+         << setw(12) << place.type << " "
+         << setw(2) << right << place.zone << " "
+         << setw(10) << right << place.pop << " "
+         << setw(8) << setprecision(2) << right << lati << " "
+         << setw(8) << setprecision(2) << right << longi << "\n";
+    return fout;
+}
 
-create_citygraph() { }
+//class dtable;
 
-read_cityinfo() { }
-write_cityinfo() { }
-write_citydtable() { }
-write_citygraph() { }
+//create_citygraph() { }
 
-class rnumgen; <-- COSC307 only
+void read_cityinfo(string fname, vector<city> &citylist)
+{
+    if (!citylist.empty())
+    {
+        citylist.clear();
+    }
+    fstream fin(fname, ios::in);
+    if (!fin.is_open())
+    {
+        fprintf(stderr, "Unable to open %s\n", fname.c_str());
+        fin.close();
+        exit(-2);
+    }
+}
 
-shortest_route() { }
+//write_cityinfo() { }
+//write_citydtable() { }
+//write_citygraph() { }
+
+//class rnumgen; <-- COSC307 only
+
+//shortest_route() { }
 
 int main(int argc, char *argv[])
 {
