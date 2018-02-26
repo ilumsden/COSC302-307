@@ -122,24 +122,40 @@ struct RGB
     uchar R, G, B;
 };
 
+/* The ppm class to store the data read from a ppm image.
+ * It stores the data in a matrix object of RGB items.
+ */ 
 class ppm
 {
     public:
+        // The dufault constructor for the ppm object.
         ppm() { ; }
+        // The defualt deconstructor for the ppm obgect.
         ~ppm() { ; }
+        // See support.cpp for read and write.
         void read(std::string fname);
         void write(std::string fname);
+        // Returns the RGB pointer returned by a call to image[i] (from the matrix class)
         RGB * operator[] (int i) { return image[i]; }
+        // Returns the number of rows of the ppm (obtained from the matrix object).
         int get_Nrows() { return image.get_Nrows(); }
+        // Returns the number of columns of the ppm (obtained from the matrix object).
         int get_Ncols() { return image.get_Ncols(); }
     private:
+        // An internal matrix of RGB structs used to store the data obtained from the ppm
         matrix<RGB> image;
 };
 
+/* This class is an implementation of a random number generator controlled by
+ * the contents of a vector.
+ */
 class rnumgen
 {
     public:
+        // The rnumgen constructor. It simply seeds the random number generator
+        // with the parameter.
         rnumgen(int seed=0) { srand(seed); }
+        // See support.cpp for pdf and rand.
         void pdf(const std::vector<int> &);
         int rand() const;
     private:
