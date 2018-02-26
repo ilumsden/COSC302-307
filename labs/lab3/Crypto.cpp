@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
      */
     if (argc == 3)
     {
-        string fname = argv[2];
+        fname = argv[2];
         /* If the file is not a ppm file, an error message
          * is printed, and the program exits.
          */
