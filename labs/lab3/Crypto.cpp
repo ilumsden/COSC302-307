@@ -49,25 +49,26 @@ void encode(ppm &img, string key)
     int s;
     int color = 0;
     char c;
-    char k = '\0';
+    char k = 0x00;
     stringstream stream(key); 
     while (1)
     {
-        if (key != "")
-        {
-            if (stream.eof())
-            {
-                stream.str(key);
-            }
-            k = stream.get();
-        }
+        c = cin.get();
         if (cin.eof())
         {
-            break;
+            c = ETX;
         }
-        fprintf(stdout, "pre-c = %c\n", c);
-        c = cin.get() ^ k;
-        fprintf(stdout, "c = %c\n\n", c);
+        if (key != "")
+        {
+            k = stream.get();
+            if (stream.eof())
+            {
+                stream.clear();
+                stream.str(key);
+                k = stream.get();
+            }
+        }
+        c = c ^ k;
         for (s = 0; s < 8; s++)
         {
             row = pixlist[i].row;
@@ -95,33 +96,9 @@ void encode(ppm &img, string key)
                 color = 0;
             }
         }
-    }
-    c = ETX ^ k;
-    for (s = 0; s < 8; s++)    
-    {
-        row = pixlist[i].row;
-        col = pixlist[i].col;
-        RGB *pix = img[row] + col;
-        if (color == 0)
+        if (cin.eof())
         {
-            pix->R &= 0xFE;
-            pix->R |= ((c >> s) & 0x1);
-        }
-        else if (color == 1)
-        {
-            pix->G &= 0xFE;
-            pix->G |= ((c >> s) & 0x1);
-        }
-        else
-        {
-            pix->B &= 0xFE;
-            pix->B |= ((c >> s) & 0x1);
-        }
-        i++;
-        color++;
-        if (color == 3)
-        {
-            color = 0;
+            break;
         }
     }
     return;
@@ -136,18 +113,10 @@ void decode(ppm &img, string key)
     int s;
     int color = 0;
     char c;
-    char k = '\0';
+    char k = 0x00;
     stringstream stream(key);
     while (1)
     {
-        if (key != "")
-        {
-            if (stream.eof())
-            {
-                stream.str(key);
-            }
-            k = stream.get();
-        }
         c = 0x00;
         for (s = 0; s < 8; s++)
         {
@@ -173,6 +142,16 @@ void decode(ppm &img, string key)
                 color = 0;
             }
         }
+        if (key != "")
+        {
+            k = stream.get();
+            if (stream.eof())
+            {
+                stream.clear();
+                stream.str(key);
+                k = stream.get();
+            }
+        }
         c = c ^ k;
         if (c == ETX)
         {
@@ -190,26 +169,36 @@ int main(int argc, char *argv[])
 {
     if (argc < 3 || argc > 4)
     {
-        fprintf(stderr, "Usage: ./Crypto -encode|decode image.ppm or ./Crypto -encode|decode image.ppm -key=\"text\"\n");
+        fprintf(stderr, "Usage: ./Crypto -encode|decode [-key=\"text\"] image.ppm\n");
         return -5;
     }
     if (strcmp(argv[1], "-encode") != 0 && strcmp(argv[1], "-decode") != 0)
     {
-        fprintf(stderr, "Usage: ./Crypto -encode|decode image.ppm or ./Crypto -encode|decode image.ppm -key=\"text\"\n");
+        fprintf(stderr, "Usage: ./Crypto -encode|decode [-key=\"text\"] image.ppm\n");
         return -6;
     }
-    string fname = argv[2];
-    if (fname.substr(fname.length() - 4) != ".ppm")
+    string fname, key;
+    if (argc == 3)
     {
-        fprintf(stderr, "Usage: ./Crypto -encode|decode image.ppm or ./Crypto -encode|decode image.ppm -key=\"text\"\n");
-        return -7;
+        string fname = argv[2];
+        if (fname.substr(fname.length() - 4) != ".ppm")
+        {
+            fprintf(stderr, "Usage: ./Crypto -encode|decode [-key=\"text\"] image.ppm\n");
+            return -7;
+        }
+        string key = "";
     }
-    string key = "";
-    if (argc == 4)
+    else
     {
-        key = argv[3];
-        key = key.substr(6);
-        key = key.substr(key.length() - 1);
+        fname = argv[3];
+        if (fname.substr(fname.length() - 4) != ".ppm")
+        {
+            fprintf(stderr, "Usage: ./Crypto -encode|decode [-key=\"text\"] image.ppm\n");
+            return -7;
+        }
+        key = argv[2];
+        size_t sub_start = key.find('=');
+        key = key.substr(sub_start+1);
     }
 
     ppm img;
