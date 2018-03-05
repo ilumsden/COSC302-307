@@ -1,9 +1,11 @@
+#include <cfloat>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
+#include <map>
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -232,7 +234,115 @@ void write_citydtable(vector<city> &citylist, dtable &dist)
     return;
 }
 
-//write_citydtable() { }
+void get_regional_cities(vector<int> &ind, vector<city> &citylist)
+{
+    for (int i = 0; i < (int)(citylist.size()); i++)
+    {
+        if (citylist[i].get_type() == REG)
+        {
+            ind.append(i);
+        }
+    }
+    return;
+}
+
+void get_gateway_cities(vector<int> &ind, vector<city> &citylist)
+{
+    for (int i = 0; i < (int)(citylist.size()); i++)
+    {
+        if (citylist[i].get_type() == GAT)
+        {
+            ind.append(i);
+        }
+    }
+    return;
+}
+
+void make_dists_vector(vector<city> &citylist, vector< pair<int, float> > &regiondists)
+{
+    int reg = 0;
+    for (int i = 0; i < (int)(citylist.size()); i++)
+    {
+        if (citylist[i].get_zone() > reg)
+        {
+            reg = citylist[i].get_zone();
+        }
+    }
+    if (!regiondists.empty())
+    {
+        regiondists.clear();
+    }
+    for (int j = 0; j < reg; j++)
+    {
+        regiondists.push_back(make_pair(0, FLT_MAX));
+    }
+    return;
+}
+
+void create_citygraph(vector<city> &citylist, dtable &dist, map< int, vector<int> > &graph )
+{
+    vector<int> reg;
+    vector<int> gate;
+    get_regional_cities(reg, citylist);
+    get_gateway_cities(gate, citylist);
+    int base;
+    vector<int> tmpdata;
+    for (int i = 0; i < (int)(reg.size()); i++)
+    {
+        base = reg[i];
+        for (int j = 0; j < (int)(reg.size()); i++)
+        {
+            if (i == j)
+            {
+                continue;
+            }
+            if (citylist[base].get_zone() == citylist[reg[j]].get_zone())
+            {
+                tmpdata.push_back(reg[j]);
+            }
+        }
+        for (int k = 0; k < (int)(gate.size()); k++)
+        {
+            int curr_gate = gate[k];
+            int min_gate = 0;
+            float min_dist = FLT_MAX;
+            if (citylist[base].get_zone() == citylist[curr_gate].get_zone())
+            {
+                if (dist(base, curr_gate) < min_dist)
+                {
+                    min_dist = dist(base, curr_gate);
+                    min_gate = curr_gate;
+                }
+            }
+        }
+        tmpdata.push_back(min_gate);
+        graph.insert(make_pair(base, tmpdata));
+        tmpdata.clear();
+    }
+    vector< pair<int, float> > regiondists;
+    make_dists_vector(citylist, regiondists);
+    for (int i = 0; i < (int)(gate.size()); i++)
+    {
+        base = gate[i];
+        for (int j = 0; j < (int)(gate.size()); i++)
+        {
+            int curr = gate[j];
+            if (i == j)
+            {
+                continue;
+            }
+            if (citylist[base].get_zone() == citylist[curr].get_zone())
+            {
+                tmpdata.push_back(curr);
+            }
+            else
+            {
+                if (dist(base, curr) <  
+            }
+        }
+    }
+}
+
 //write_citygraph() { }
 
 //class rnumgen; <-- COSC307 only
@@ -241,10 +351,10 @@ void write_citydtable(vector<city> &citylist, dtable &dist)
 
 int main(int argc, char *argv[])
 {
-    bool flags[argc];
+    int flags[3];
     if (argc == 1)
     {
-        flags[0] = true;
+        flags[0] = 1;
     }
     else
     {
@@ -254,13 +364,11 @@ int main(int argc, char *argv[])
             f = argv[i];
             if (f == "-write_info")
             {
-                fprintf(stdout, "Write Info CLC\n");
-                flags[1] = true;
+                flags[1] = 1;
             }
             else if (f == "-write_dtable")
             {
-                fprintf(stdout, "Write Dtable CLC\n");
-                flags[2] = true;
+                flags[2] = 1;
             }
             else
             {
@@ -273,15 +381,13 @@ int main(int argc, char *argv[])
     string readfile = "citylist.txt";
 
     read_cityinfo(readfile, citylist);
-    if (flags[1] == true)
+    if (flags[1] == 1)
     {
-        fprintf(stdout, "Write City Info\n");
         write_cityinfo(citylist);
     }
     dtable dist(citylist);
-    if (flags[2] == true)
+    if (flags[2] == 1)
     {
-        fprintf(stdout, "Write City Dtable\n");
         write_citydtable(citylist, dist);
     }
 
