@@ -357,7 +357,7 @@ DISTANCE TABLE:
  26 San_Fransisco_CA to Knoxville_TN .....    0 miles
  26 San_Fransisco_CA to Houston_TX .......    0 miles
  26 San_Fransisco_CA to Honolulu_HI ......    0 miles
- 26 San_Fransisco_CA to Denver_CO ........1.47942e-38 miles
+ 26 San_Fransisco_CA to Denver_CO ........1.17848e-37 miles
  26 San_Fransisco_CA to Minneapolis_MN ...    0 miles
  26 San_Fransisco_CA to Frankfurt_DE .....    0 miles
  26 San_Fransisco_CA to Moscow_RU ........    0 miles

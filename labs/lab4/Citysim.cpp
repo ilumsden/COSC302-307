@@ -95,7 +95,8 @@ dtable::dtable(vector<city> &citylist)
             lat2 = citylist[j].get_latitude();
             long1 = citylist[i].get_longitude();
             long2 = citylist[j].get_longitude();
-            centangle = acos(sin(lat1)*sin(lat2) + cos(lat1)*cos(lat2)*cos(long1 - long2));
+            centangle = sqrt(pow(sin((lat1-lat2)/2), 2) + cos(lat1)*cos(lat2)*pow(sin((long1-long2)/2), 2));
+            centangle = 2*asin(centangle);
             distance = centangle * 3982;
             distance = 5.0*round(distance/5.0);
             dist.push_back(distance);
