@@ -1,16 +1,18 @@
-#define _USE_MATH_DEFINES
-
 #include <cmath>
 #include <cstdio>
+#include <cstring>
+#include <cstdlib>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 using namespace std;
 
 const string REG = "REGIONAL";
 const string GAT = "GATEWAY";
+const float PI = 3.1415926535897932384626433;
 
 class city
 {
@@ -46,14 +48,14 @@ istream & operator>>(istream &fin, city &place)
     }
     sin.str(tmp);
     float lati, longi;
-    sin >> place.zone >> place.name >> place.type >> lati >> longi;
-    if (place.type != REG && place.type != GAT)
+    sin >> place.zone >> place.name >> place.type >> lati >> longi >> place.pop;
+    /*if (place.type != REG && place.type != GAT)
     {
         fprintf(stderr, "%s does not have a valid city type.\n", place.name.c_str());
         exit(-1);
-    }
-    lati = lait*(M_PI / 180);
-    longi = longi*(M_PI / 180);
+    }*/
+    lati = lati*(PI / 180);
+    longi = longi*(PI / 180);
     place.latitude = lati;
     place.longitude = longi;
     return fin;
@@ -61,18 +63,57 @@ istream & operator>>(istream &fin, city &place)
 
 ostream & operator<<(ostream &fout, city &place)
 {
-    float lati = place.latitude * (180/M_PI);
-    float longi = place.longitude * (180/M_PI);
-    fout << setw(20) << place.name << " "
-         << setw(12) << place.type << " "
+    float lati = place.latitude * (180/PI);
+    float longi = place.longitude * (180/PI);
+    fout << setw(20) << left << place.name << " "
+         << setw(12) << left << place.type << " "
          << setw(2) << right << place.zone << " "
          << setw(10) << right << place.pop << " "
-         << setw(8) << setprecision(2) << right << lati << " "
-         << setw(8) << setprecision(2) << right << longi << "\n";
+         << setw(8) << setprecision(2) << fixed << right << lati << " "
+         << setw(8) << setprecision(2) << fixed << right << longi << "\n";
     return fout;
 }
 
-//class dtable;
+class dtable
+{
+    public:
+        dtable(vector<city> &);
+        float operator()(int, int);
+    private:
+        vector<float> dist;
+};
+
+dtable::dtable(vector<city> &citylist)
+{
+    float lat1, lat2, long1, long2;
+    float centangle, distance;
+    for (int i = 0; i < (int)(citylist.size()); i++)
+    {
+        for (int j = i; j >= 0; j--)
+        {
+            lat1 = citylist[i].get_latitude();
+            lat2 = citylist[j].get_latitude();
+            long1 = citylist[i].get_longitude();
+            long2 = citylist[j].get_longitude();
+            centangle = acos(sin(lat1)*sin(lat2) + cos(lat1)*cos(lat2)*cos(long1 - long2));
+            distance = centangle * 3982;
+            distance = 5.0*round(distance/5.0);
+            dist.push_back(distance);
+        }
+    }
+    return;
+}
+
+float dtable::operator()(int i, int j)
+{
+    if (i < j)
+    {
+        int tmp = j;
+        j = i;
+        i = tmp;
+    }
+    return (&dist[(i*(i+1))/2])[(j*(j+1))/2];
+}
 
 //create_citygraph() { }
 
@@ -82,16 +123,93 @@ void read_cityinfo(string fname, vector<city> &citylist)
     {
         citylist.clear();
     }
-    fstream fin(fname, ios::in);
+    fstream fin(fname.c_str(), ios::in);
     if (!fin.is_open())
     {
         fprintf(stderr, "Unable to open %s\n", fname.c_str());
         fin.close();
         exit(-2);
     }
+    city tmp;
+    while (fin >> tmp)
+    {
+        if (fin.eof())
+        {
+            break;
+        }
+        citylist.push_back(tmp);
+    }
+    fin.close();
+    return;
 }
 
-//write_cityinfo() { }
+void write_cityinfo(vector<city> &citylist)
+{
+    string fname = "cityinfo.txt";
+    if (citylist.empty())
+    {
+        return;
+    }
+    fstream fout(fname.c_str(), ios::out);
+    if (!fout.is_open())
+    {
+        fprintf(stderr, "Unable to open/create %s\n", fname.c_str());
+        fout.close();
+        exit(-3);
+    }
+    fout << "CITY INFO (N=" << (int)(citylist.size()) << "):\n\n";
+    int linenum_width = floor(log10((int)(citylist.size()))) + 1;
+    for (int i = 0; i < (int)(citylist.size()); i++)
+    {
+        fout << " " << setw(linenum_width) << right << i << " ";
+        fout << citylist[i];
+    }
+    fout.close();
+    return;
+}
+
+int longest_name(vector<city> &citylist)
+{
+    int length = 0;
+    for (int i = 0; i < (int)(citylist.size()); i++)
+    {
+        if ((int)(citylist[i].get_name().length()) > length)
+        {
+            length = citylist[i].get_name().length();
+        }
+    }
+    return length;
+}
+
+void write_citydtable(vector<city> &citylist, dtable &dist)
+{
+    string fname = "citydtable.txt";
+    fstream fout(fname.c_str(), ios::out);
+    if (!fout.is_open())
+    {
+        fprintf(stderr, "Unable to open/create %s\n", fname.c_str());
+        fout.close();
+        exit(-5);
+    }
+    int width = longest_name(citylist);
+    string name, distance;
+    fout << "DISTANCE TABLE:\n\n";
+    for (int i = 1; i < (int)(citylist.size()); i++)
+    {
+        for (int j = i - 1; j >= 0; j--)
+        {
+            name = citylist[i].get_name() + " to " + citylist[j].get_name();
+            distance = dist(i, j) + " miles\n";
+            fout << " " << right << i << " ";
+            fout << setfill('.') << setw(2*width+4) << left << name;
+            fout << " " << right << distance;
+        }
+        fout << "\n";
+    }
+    fout.close();
+    return;
+}
+
 //write_citydtable() { }
 //write_citygraph() { }
 
@@ -101,21 +219,60 @@ void read_cityinfo(string fname, vector<city> &citylist)
 
 int main(int argc, char *argv[])
 {
-  option decoding
+    bool flags[argc];
+    if (argc == 1)
+    {
+        flags[0] = true;
+    }
+    else
+    {
+        string f;
+        for (int i = 1; i < argc; i++)
+        {
+            f = argv[i];
+            if (f == "-write_info")
+            {
+                flags[1] = true;
+            }
+            else if (f == "-write_dtable")
+            {
+                flags[2] = true;
+            }
+            else
+            {
+                fprintf(stderr, "Usage: ./Citysim -write_info|write_dtable\n");
+                return -4;
+            }
+        }
+    }
+    vector<city> citylist;
+    string readfile = "citylist.txt";
 
-  object declarations
+    read_cityinfo(readfile, citylist);
+    if (flags[1] == true)
+    {
+        fprintf(stdout, "Write City Info\n");
+        write_cityinfo(citylist);
+    }
+    dtable dist(citylist);
+    if (flags[2] == true)
+    {
+        fprintf(stdout, "Write City Dtable\n");
+        write_citydtable(citylist, dist);
+    }
 
-  read_cityinfo()
-  if (option_write_cityinfo) 
-    write_cityinfo()
+    /*read_cityinfo()
+    if (option_write_cityinfo) 
+      write_cityinfo()
 
-  create_citygraph()
-  if (option_write_citydtable) 
-    write_citydtable()
+    create_citygraph()
+    if (option_write_citydtable) 
+      write_citydtable()
 
-  if (option_write_citygraph) 
-    write_citygraph()
+    if (option_write_citygraph) 
+      write_citygraph()
 
-  while (not done)
-    shortest_route(from,to) 
+    while (not done)
+      shortest_route(from,to)*/
+    return 0;
 }
