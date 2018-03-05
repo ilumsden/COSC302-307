@@ -78,13 +78,15 @@ class dtable
 {
     public:
         dtable(vector<city> &);
+        float * operator[](int i) { return &dist[(i*(i+1))/2]; }
         float operator()(int, int);
     private:
-        vector<float> dist;
+        float *dist;
 };
 
 dtable::dtable(vector<city> &citylist)
 {
+    dist = new float [(citylist.size()*(citylist.size()+1))/2];
     float lat1, lat2, long1, long2;
     float centangle, distance;
     for (int i = 0; i < (int)(citylist.size()); i++)
@@ -99,7 +101,7 @@ dtable::dtable(vector<city> &citylist)
             centangle = 2*asin(centangle);
             distance = centangle * 3982;
             distance = 5.0*round(distance/5.0);
-            dist.push_back(distance);
+            (*this)[i][j] = distance;
         }
     }
     return;
@@ -113,7 +115,7 @@ float dtable::operator()(int i, int j)
         j = i;
         i = tmp;
     }
-    return (&dist[(i*(i+1))/2])[(j*(j+1))/2];
+    return (*this)[i][j]; 
 }
 
 //create_citygraph() { }
@@ -213,13 +215,14 @@ void write_citydtable(vector<city> &citylist, dtable &dist)
     int width = longest_name(citylist);
     int mile_length = longest_distance(dist, (int)(citylist.size()));
     string name, distance;
+    int linenum_width = floor(log10((int)(citylist.size()))) + 1;
     fout << "DISTANCE TABLE:\n\n";
     for (int i = 1; i < (int)(citylist.size()); i++)
     {
-        for (int j = i - 1; j >= 0; j--)
+        for (int j = 0; j < i; j++)
         {
             name = citylist[i].get_name() + " to " + citylist[j].get_name() + " ";
-            fout << " " << right << i << " ";
+            fout << " " << setw(linenum_width) << right << i << " ";
             fout << setfill('.') << setw(2*width+4) << left << name;
             fout << setw(mile_length) << setfill(' ') << right << dist(i, j) << " miles\n";
         }
@@ -251,10 +254,12 @@ int main(int argc, char *argv[])
             f = argv[i];
             if (f == "-write_info")
             {
+                fprintf(stdout, "Write Info CLC\n");
                 flags[1] = true;
             }
             else if (f == "-write_dtable")
             {
+                fprintf(stdout, "Write Dtable CLC\n");
                 flags[2] = true;
             }
             else
