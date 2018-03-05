@@ -181,6 +181,24 @@ int longest_name(vector<city> &citylist)
     return length;
 }
 
+int longest_distance(dtable &dist, int size)
+{
+    int length;
+    int max_length = 0;
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = i; j >= 0; j--)
+        {
+            length = floor(log10(dist(i, j))) + 1;
+            if (length > max_length)
+            {
+                max_length = length;
+            }
+        }
+    }
+    return max_length;
+}
+
 void write_citydtable(vector<city> &citylist, dtable &dist)
 {
     string fname = "citydtable.txt";
@@ -192,6 +210,7 @@ void write_citydtable(vector<city> &citylist, dtable &dist)
         exit(-5);
     }
     int width = longest_name(citylist);
+    int mile_length = longest_distance(dist, (int)(citylist.size()));
     string name, distance;
     fout << "DISTANCE TABLE:\n\n";
     for (int i = 1; i < (int)(citylist.size()); i++)
@@ -199,10 +218,9 @@ void write_citydtable(vector<city> &citylist, dtable &dist)
         for (int j = i - 1; j >= 0; j--)
         {
             name = citylist[i].get_name() + " to " + citylist[j].get_name();
-            distance = dist(i, j) + " miles\n";
             fout << " " << right << i << " ";
             fout << setfill('.') << setw(2*width+4) << left << name;
-            fout << " " << right << distance;
+            fout << " " << setw(mile_length) << setfill(' ') << right << dist(i, j) << " miles\n";
         }
         fout << "\n";
     }
