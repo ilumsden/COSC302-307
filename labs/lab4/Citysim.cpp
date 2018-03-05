@@ -217,10 +217,10 @@ void write_citydtable(vector<city> &citylist, dtable &dist)
     {
         for (int j = i - 1; j >= 0; j--)
         {
-            name = citylist[i].get_name() + " to " + citylist[j].get_name();
+            name = citylist[i].get_name() + " to " + citylist[j].get_name() + " ";
             fout << " " << right << i << " ";
             fout << setfill('.') << setw(2*width+4) << left << name;
-            fout << " " << setw(mile_length) << setfill(' ') << right << dist(i, j) << " miles\n";
+            fout << setw(mile_length) << setfill(' ') << right << dist(i, j) << " miles\n";
         }
         fout << "\n";
     }
