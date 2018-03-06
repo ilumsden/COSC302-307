@@ -51,11 +51,6 @@ istream & operator>>(istream &fin, city &place)
     sin.str(tmp);
     float lati, longi;
     sin >> place.zone >> place.name >> place.type >> lati >> longi >> place.pop;
-    /*if (place.type != REG && place.type != GAT)
-    {
-        fprintf(stderr, "%s does not have a valid city type.\n", place.name.c_str());
-        exit(-1);
-    }*/
     lati = lati*(PI / 180);
     longi = longi*(PI / 180);
     place.latitude = lati;
@@ -132,7 +127,7 @@ void read_cityinfo(string fname, vector<city> &citylist)
     {
         fprintf(stderr, "Unable to open %s\n", fname.c_str());
         fin.close();
-        exit(-2);
+        exit(-1);
     }
     city tmp;
     while (fin >> tmp)
@@ -159,7 +154,7 @@ void write_cityinfo(vector<city> &citylist)
     {
         fprintf(stderr, "Unable to open/create %s\n", fname.c_str());
         fout.close();
-        exit(-3);
+        exit(-2);
     }
     fout << "CITY INFO (N=" << (int)(citylist.size()) << "):\n\n";
     int linenum_width = floor(log10((int)(citylist.size()))) + 1;
@@ -211,7 +206,7 @@ void write_citydtable(vector<city> &citylist, dtable &dist)
     {
         fprintf(stderr, "Unable to open/create %s\n", fname.c_str());
         fout.close();
-        exit(-5);
+        exit(-4);
     }
     int width = longest_name(citylist);
     int mile_length = longest_distance(dist, (int)(citylist.size()));
@@ -461,7 +456,7 @@ void write_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
 
 int main(int argc, char *argv[])
 {
-    int flags[4];
+    int flags[5];
     if (argc == 1)
     {
         flags[0] = 1;
@@ -484,10 +479,14 @@ int main(int argc, char *argv[])
             {
                 flags[3] = 1;
             }
+            else if (f == "-mode_bfs" || f == "-mode_dijkstra")
+            {
+                flags[4] = 1;
+            }
             else
             {
-                fprintf(stderr, "Usage: ./Citysim -write_info|write_dtable\n");
-                return -4;
+                fprintf(stderr, "Usage: ./Citysim -write_info|write_dtable|write_graph|mode_bfs|mode_dijkstra\n");
+                return -3;
             }
         }
     }
@@ -509,6 +508,11 @@ int main(int argc, char *argv[])
     if (flags[3] == 1)
     {
         write_citygraph(citylist, dist, graph);
+    }
+    if (flags[4] == 1)
+    {
+        fprintf(stderr, "The bfs/dijkstra modes are not yet implemented. Aborting\n");
+        return -5; 
     }
 
     /*read_cityinfo()
