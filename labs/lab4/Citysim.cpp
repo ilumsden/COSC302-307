@@ -5,9 +5,10 @@
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
-#include <map>
 #include <fstream>
+#include <map>
 #include <sstream>
+#include <utility>
 #include <vector>
 
 using namespace std;
@@ -116,11 +117,15 @@ float dtable::operator()(int i, int j)
     return (*this)[i][j]; 
 }
 
-void read_cityinfo(string fname, vector<city> &citylist)
+void read_cityinfo(string fname, vector<city> &citylist, map< pair<string, int> > name_dict)
 {
     if (!citylist.empty())
     {
         citylist.clear();
+    }
+    if (!name_dict.empty())
+    {
+        name_dict.clear();
     }
     fstream fin(fname.c_str(), ios::in);
     if (!fin.is_open())
@@ -130,6 +135,7 @@ void read_cityinfo(string fname, vector<city> &citylist)
         exit(-1);
     }
     city tmp;
+    int i = 0;
     while (fin >> tmp)
     {
         if (fin.eof())
@@ -137,6 +143,8 @@ void read_cityinfo(string fname, vector<city> &citylist)
             break;
         }
         citylist.push_back(tmp);
+        name_dict.insert(make_pair(tmp.get_name(), i));
+        i++;
     }
     fin.close();
     return;
@@ -491,9 +499,10 @@ int main(int argc, char *argv[])
         }
     }
     vector<city> citylist;
+    map< pair<string, int> > name_dict;
     string readfile = "citylist.txt";
 
-    read_cityinfo(readfile, citylist);
+    read_cityinfo(readfile, citylist, name_dict);
     if (flags[1] == 1)
     {
         write_cityinfo(citylist);
