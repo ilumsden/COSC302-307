@@ -80,6 +80,7 @@ class dtable
 {
     public:
         dtable(vector<city> &);
+        ~dtable() { delete [] dist; }
         float * operator[](int i) { return &dist[(i*(i+1))/2]; }
         float operator()(int, int);
     private:
@@ -119,8 +120,6 @@ float dtable::operator()(int i, int j)
     }
     return (*this)[i][j]; 
 }
-
-//create_citygraph() { }
 
 void read_cityinfo(string fname, vector<city> &citylist)
 {
@@ -234,13 +233,61 @@ void write_citydtable(vector<city> &citylist, dtable &dist)
     return;
 }
 
+class edge
+{
+    public:
+        edge(int);
+        ~edge() { delete [] adj; }
+        int * operator[](int i) { return &adj[(i*(i+1))/2]; }
+        void set_edge(int, int);
+        int get_edge(int, int);
+    private:
+        int *adj;
+};
+
+edge::edge(int num_cities)
+{
+    adj = new int[num_cities];
+    /* This loop prevents issues that could be caused by the Hydra machines.
+     * For some reason, the compiler on Hydra initializes ints to (seemingly) random
+     * values rather than 0. This loop ensures that the initial values are all 0.
+     */
+    for (int i = 0; i < num_cities; i++)
+    {
+        adj[i] = 0;
+    }
+}
+
+void edge::set_edge(int i, int j)
+{
+    if (i < j)
+    {
+        int tmp = j;
+        j = i;
+        i = tmp;
+    }
+    (*this)[i][j] = 1;
+    return;
+}
+
+int edge::get_edge(int i, int j)
+{
+    if (i < j)
+    {
+        int tmp = j;
+        j = i;
+        i = tmp;
+    }
+    return (*this)[i][j]; 
+}
+
 void get_regional_cities(vector<int> &ind, vector<city> &citylist)
 {
     for (int i = 0; i < (int)(citylist.size()); i++)
     {
         if (citylist[i].get_type() == REG)
         {
-            ind.append(i);
+            ind.push_back(i);
         }
     }
     return;
@@ -252,95 +299,122 @@ void get_gateway_cities(vector<int> &ind, vector<city> &citylist)
     {
         if (citylist[i].get_type() == GAT)
         {
-            ind.append(i);
+            ind.push_back(i);
         }
     }
     return;
 }
 
-void make_dists_vector(vector<city> &citylist, vector< pair<int, float> > &regiondists)
+void get_gateways_by_zone(vector< vector<int> > &zones, vector<city> &citylist, vector<int> &gate)
 {
-    int reg = 0;
+    vector<int> zonex;
+    int numzones = 0;
+    if (!zones.empty())
+    {
+        zones.clear();
+    }
     for (int i = 0; i < (int)(citylist.size()); i++)
     {
-        if (citylist[i].get_zone() > reg)
+        if (citylist[i].zone > numzones)
         {
-            reg = citylist[i].get_zone();
+            numzones = citylist[i].zone;
         }
     }
-    if (!regiondists.empty())
+    int curr;
+    for (int i = 0; i < numzones; i++)
     {
-        regiondists.clear();
-    }
-    for (int j = 0; j < reg; j++)
-    {
-        regiondists.push_back(make_pair(0, FLT_MAX));
+        for (int j = 0; j < (int)(gate.size()); j++)
+        {
+            curr = gate[j];
+            if (citylist[curr].zone == i+1)
+            {
+                zonex.push_back(curr);
+            }
+        }
+        zones.push_back(zonex);
+        zonex.clear();
     }
     return;
 }
 
-void create_citygraph(vector<city> &citylist, dtable &dist, map< int, vector<int> > &graph )
+void create_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
 {
     vector<int> reg;
     vector<int> gate;
     get_regional_cities(reg, citylist);
     get_gateway_cities(gate, citylist);
-    int base;
-    vector<int> tmpdata;
-    for (int i = 0; i < (int)(reg.size()); i++)
+    int base, curr;
+    int min_dist = FLT_MAX;
+    int min_ind;
+    for (int i = 0; i < (int)(reg.size())-1; i++)
     {
         base = reg[i];
-        for (int j = 0; j < (int)(reg.size()); i++)
+        for (int j = i+1; j < (int)(reg.size()); j++)
         {
-            if (i == j)
+            curr = reg[j];
+            if (citylist[base].zone == citylist[curr].zone)
             {
-                continue;
-            }
-            if (citylist[base].get_zone() == citylist[reg[j]].get_zone())
-            {
-                tmpdata.push_back(reg[j]);
+                graph.set_edge(base, curr);
             }
         }
         for (int k = 0; k < (int)(gate.size()); k++)
         {
-            int curr_gate = gate[k];
-            int min_gate = 0;
-            float min_dist = FLT_MAX;
-            if (citylist[base].get_zone() == citylist[curr_gate].get_zone())
+            curr = gate[k];
+            if (citylist[base].zone == citylist[curr].zone)
             {
-                if (dist(base, curr_gate) < min_dist)
+                if (dist(base, curr) < min_dist)
                 {
-                    min_dist = dist(base, curr_gate);
-                    min_gate = curr_gate;
+                    min_dist = dist(base, curr);
+                    min_ind = curr;
                 }
             }
         }
-        tmpdata.push_back(min_gate);
-        graph.insert(make_pair(base, tmpdata));
-        tmpdata.clear();
+        graph.set_edge(base, min_ind);
     }
-    vector< pair<int, float> > regiondists;
-    make_dists_vector(citylist, regiondists);
-    for (int i = 0; i < (int)(gate.size()); i++)
+    vector< vector<int> > zones;
+    vector<int> zonex;
+    get_gateways_by_zone(zones, citylist, gate);
+    for (int i = 0; i < (int)(gate.size())-1; i++)
     {
         base = gate[i];
-        for (int j = 0; j < (int)(gate.size()); i++)
+        for (int j = i+1; j < (int)(gate.size()); j++)
         {
-            int curr = gate[j];
-            if (i == j)
+            curr = gate[j];
+            if (citylist[base].zone == citylist[curr].zone)
+            {
+                graph.set_edge(base, curr);
+            }
+        }
+        for (int k = 0; k < (int)(zones.size()); k++)
+        {
+            if (citylist[base].zone == k+1)
             {
                 continue;
             }
-            if (citylist[base].get_zone() == citylist[curr].get_zone())
+            zonex = zones[k];
+            min_dist = FLT_MAX;
+            min_ind = 0;
+            for (int l = 0; l < (int)(zonex.size()); l++)
             {
-                tmpdata.push_back(curr);
+                curr = zonex[l];
+                if (dist(base, curr) < min_dist && dist(base, curr) < 6000)
+                {
+                    min_dist = dist(base, curr);
+                    min_ind = curr;
+                }
             }
-            else
+            if (min_dist != FLT_MAX)
             {
-                if (dist(base, curr) <  
+                graph.set_edge(base, min_ind);
             }
         }
     }
+    return;
+}
+
+void write_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
+{
+
 }
 
 //write_citygraph() { }
