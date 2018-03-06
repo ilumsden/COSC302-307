@@ -247,7 +247,7 @@ class edge
 
 edge::edge(int num_cities)
 {
-    adj = new int[num_cities];
+    adj = new int[(num_cities*(num_cities+1))/2];
     /* This loop prevents issues that could be caused by the Hydra machines.
      * For some reason, the compiler on Hydra initializes ints to (seemingly) random
      * values rather than 0. This loop ensures that the initial values are all 0.
@@ -315,9 +315,9 @@ void get_gateways_by_zone(vector< vector<int> > &zones, vector<city> &citylist, 
     }
     for (int i = 0; i < (int)(citylist.size()); i++)
     {
-        if (citylist[i].zone > numzones)
+        if (citylist[i].get_zone() > numzones)
         {
-            numzones = citylist[i].zone;
+            numzones = citylist[i].get_zone();
         }
     }
     int curr;
@@ -326,7 +326,7 @@ void get_gateways_by_zone(vector< vector<int> > &zones, vector<city> &citylist, 
         for (int j = 0; j < (int)(gate.size()); j++)
         {
             curr = gate[j];
-            if (citylist[curr].zone == i+1)
+            if (citylist[curr].get_zone() == i+1)
             {
                 zonex.push_back(curr);
             }
@@ -344,23 +344,25 @@ void create_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
     get_regional_cities(reg, citylist);
     get_gateway_cities(gate, citylist);
     int base, curr;
-    int min_dist = FLT_MAX;
+    float min_dist;
     int min_ind;
-    for (int i = 0; i < (int)(reg.size())-1; i++)
+    for (int i = 0; i < (int)(reg.size()); i++)
     {
         base = reg[i];
         for (int j = i+1; j < (int)(reg.size()); j++)
         {
             curr = reg[j];
-            if (citylist[base].zone == citylist[curr].zone)
+            if (citylist[base].get_zone() == citylist[curr].get_zone())
             {
                 graph.set_edge(base, curr);
             }
         }
+        min_ind = -1;
+        min_dist = FLT_MAX;
         for (int k = 0; k < (int)(gate.size()); k++)
         {
             curr = gate[k];
-            if (citylist[base].zone == citylist[curr].zone)
+            if (citylist[base].get_zone() == citylist[curr].get_zone())
             {
                 if (dist(base, curr) < min_dist)
                 {
@@ -369,25 +371,28 @@ void create_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
                 }
             }
         }
-        graph.set_edge(base, min_ind);
+        if (min_dist != FLT_MAX && min_ind != -1)
+        {
+            graph.set_edge(base, min_ind);
+        }
     }
     vector< vector<int> > zones;
     vector<int> zonex;
     get_gateways_by_zone(zones, citylist, gate);
-    for (int i = 0; i < (int)(gate.size())-1; i++)
+    for (int i = 0; i < (int)(gate.size()); i++)
     {
         base = gate[i];
         for (int j = i+1; j < (int)(gate.size()); j++)
         {
             curr = gate[j];
-            if (citylist[base].zone == citylist[curr].zone)
+            if (citylist[base].get_zone() == citylist[curr].get_zone())
             {
                 graph.set_edge(base, curr);
             }
         }
         for (int k = 0; k < (int)(zones.size()); k++)
         {
-            if (citylist[base].zone == k+1)
+            if (citylist[base].get_zone() == k+1)
             {
                 continue;
             }
@@ -414,7 +419,38 @@ void create_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
 
 void write_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
 {
-
+    int linenum_width = floor(log10((int)(citylist.size()))) + 1;
+    string fname = "citygraph.txt";
+    fstream fout(fname.c_str(), ios::out);
+    fout << "CITY GRAPH:\n\n";
+    for (int i = 0; i < (int)(citylist.size()); i++)
+    {
+        fout << " " << setw(linenum_width) << right << i << " " << citylist[i].get_name() << "\n";
+        for (int j = 0; j < (int)(citylist.size()); j++)
+        {
+            if (i == j)
+            {
+                continue;
+            }
+            if (graph.get_edge(i, j) == 1)
+            {
+                fout << " ";
+                for (int k = 0; k < linenum_width; k++)
+                {
+                    fout << " ";
+                }
+                fout << " ";
+                fout << setw(linenum_width) << right << j << " "
+                     << citylist[j].get_name() << ": "
+                     << dist(i, j) << " miles\n";
+            }
+        }
+        if (i+1 != (int)(citylist.size()))
+        {
+            fout << "\n";
+        }
+    }
+    return;
 }
 
 //write_citygraph() { }
@@ -425,7 +461,7 @@ void write_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
 
 int main(int argc, char *argv[])
 {
-    int flags[3];
+    int flags[4];
     if (argc == 1)
     {
         flags[0] = 1;
@@ -443,6 +479,10 @@ int main(int argc, char *argv[])
             else if (f == "-write_dtable")
             {
                 flags[2] = 1;
+            }
+            else if (f == "-write_graph")
+            {
+                flags[3] = 1;
             }
             else
             {
@@ -463,6 +503,12 @@ int main(int argc, char *argv[])
     if (flags[2] == 1)
     {
         write_citydtable(citylist, dist);
+    }
+    edge graph((int)(citylist.size()));
+    create_citygraph(citylist, dist, graph);
+    if (flags[3] == 1)
+    {
+        write_citygraph(citylist, dist, graph);
     }
 
     /*read_cityinfo()
