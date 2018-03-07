@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <fstream>
 #include <map>
+#include <queue>
 #include <sstream>
 #include <utility>
 #include <vector>
@@ -117,7 +118,7 @@ float dtable::operator()(int i, int j)
     return (*this)[i][j]; 
 }
 
-void read_cityinfo(string fname, vector<city> &citylist, map< pair<string, int> > name_dict)
+void read_cityinfo(string fname, vector<city> &citylist, map<string, int> name_dict)
 {
     if (!citylist.empty())
     {
@@ -456,6 +457,34 @@ void write_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
     return;
 }
 
+void bfs_distance(int source, vector<float> &vdist, vector<city> &citylist, edge &graph)
+{
+    if (!vdist.empty())
+    {
+        vdist.clear();
+    }
+    vdist.assign(citylist.size(), FLT_MAX);
+    vdist[source] = 0;
+    queue<int> vert;
+    vert.push(source);
+    while (!Q.empty())
+    {
+        int ind = vert.front();
+        vert.pop();
+        for (int k = 0; k < (int)(citylist.size()); k++)
+        {
+            if (graph.get_edge(ind, k) == 1)
+            {
+                if (vdist[k] == FLT_MAX)
+                {
+                    vdist[k] = vdist[ind] + 1;
+                    vert.push(k);
+                }
+            }
+        }
+    }
+}
+
 //write_citygraph() { }
 
 //class rnumgen; <-- COSC307 only
@@ -499,7 +528,7 @@ int main(int argc, char *argv[])
         }
     }
     vector<city> citylist;
-    map< pair<string, int> > name_dict;
+    map<string, int> name_dict;
     string readfile = "citylist.txt";
 
     read_cityinfo(readfile, citylist, name_dict);
