@@ -485,6 +485,61 @@ void bfs_distance(int source, vector<float> &vdist, vector<city> &citylist, edge
     }
 }
 
+typedef enum { WHITE, BLACK } vcolor_t;
+
+void dijkstra_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, vector<city> &citylist, edge &graph, dtable &dist)
+{
+    vector<vcolor_t> vcolor;
+    vcolor.assign(citylist.size(), WHITE);
+    if (!vdist.empty())
+    {
+        vdist.clear();
+    }
+    vdist.assign(citylist.size(), FLT_MAX);
+    vdist[source] = 0;
+    if (!vlink.empty())
+    {
+        vlink.clear();
+    }
+    vlink.assign(citylist.size(), -1);
+    vlink[source] = source;
+    while (1)
+    {
+        int i;
+        int i_mindist = -1;
+        float mindist = FLT_MAX;
+        for (int j = 0; j < (int)(vcolor.size()); j++)
+        {
+            if (vcolor[j] == WHITE && mindist > vdist[j])
+            {
+                i_mindist = j;
+                mindist = vdist[j];
+            }
+        }
+        if ((i = i_mindist) == -1)
+        {
+            return;
+        }
+        vcolor[i] = BLACK;
+        if (i == sink)
+        {
+            break;
+        }
+        for (int k = 0; k < (int)(citylist.size()); k++)
+        {
+            if (graph.get_edge(i, k) == 1)
+            {
+                float weight = dist(i, k);
+                if (vcolor[k] == WHITE)
+                {
+                    vdist[k] = vdist[i] + weight;
+                    vlink[k] = i;
+                }
+            }
+        }
+    }
+}
+
 //write_citygraph() { }
 
 //class rnumgen; <-- COSC307 only
