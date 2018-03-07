@@ -457,20 +457,30 @@ void write_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
     return;
 }
 
-void bfs_distance(int source, vector<float> &vdist, vector<city> &citylist, edge &graph)
+void bfs_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, vector<city> &citylist, edge &graph)
 {
     if (!vdist.empty())
     {
         vdist.clear();
     }
+    if (!vlink.empty())
+    {
+        vlink.clear();
+    }
     vdist.assign(citylist.size(), FLT_MAX);
+    vlink.assign(citylist.size(), -1);
     vdist[source] = 0;
+    vlink[source] = source;
     queue<int> vert;
     vert.push(source);
-    while (!Q.empty())
+    while (!vert.empty())
     {
         int ind = vert.front();
         vert.pop();
+        if (ind == sink)
+        {
+            break;
+        }
         for (int k = 0; k < (int)(citylist.size()); k++)
         {
             if (graph.get_edge(ind, k) == 1)
@@ -478,10 +488,15 @@ void bfs_distance(int source, vector<float> &vdist, vector<city> &citylist, edge
                 if (vdist[k] == FLT_MAX)
                 {
                     vdist[k] = vdist[ind] + 1;
+                    vlink[k] = ind;
                     vert.push(k);
                 }
             }
         }
+    }
+    while (!vert.empty())
+    {
+        vert.pop();
     }
 }
 
