@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cfloat>
 #include <cmath>
 #include <cstdio>
@@ -7,6 +8,7 @@
 #include <iomanip>
 #include <fstream>
 #include <map>
+#include <numeric>
 #include <queue>
 #include <sstream>
 #include <stack>
@@ -23,7 +25,7 @@ class city
 {
     public:
         friend istream & operator>>(istream &, city &);
-        friend ostream & operator<<(ostream &, city &);
+        friend ostream & operator<<(ostream &, const city &);
         string get_name() const { return name; }
         string get_type() const { return type; }
         int get_zone() const { return zone; }
@@ -61,7 +63,7 @@ istream & operator>>(istream &fin, city &place)
     return fin;
 }
 
-ostream & operator<<(ostream &fout, city &place)
+ostream & operator<<(ostream &fout, const city &place)
 {
     float lati = place.latitude * (180/PI);
     float longi = place.longitude * (180/PI);
@@ -79,8 +81,8 @@ class dtable
     public:
         dtable(vector<city> &);
         ~dtable() { delete [] dist; }
-        float * operator[](int i) { return &dist[(i*(i+1))/2]; }
-        float operator()(int, int);
+        float * operator[](int i) const { return &dist[(i*(i+1))/2]; }
+        float operator()(int, int) const;
     private:
         float *dist;
 };
@@ -108,7 +110,7 @@ dtable::dtable(vector<city> &citylist)
     return;
 }
 
-float dtable::operator()(int i, int j)
+float dtable::operator()(int i, int j) const
 {
     if (i < j)
     {
@@ -152,7 +154,7 @@ void read_cityinfo(string fname, vector<city> &citylist, map<string, int> &name_
     return;
 }
 
-void write_cityinfo(vector<city> &citylist)
+void write_cityinfo(const vector<city> &citylist)
 {
     string fname = "cityinfo.txt";
     if (citylist.empty())
@@ -177,7 +179,7 @@ void write_cityinfo(vector<city> &citylist)
     return;
 }
 
-int longest_name(vector<city> &citylist)
+int longest_name(const vector<city> &citylist)
 {
     int length = 0;
     for (int i = 0; i < (int)(citylist.size()); i++)
@@ -190,7 +192,7 @@ int longest_name(vector<city> &citylist)
     return length;
 }
 
-int longest_distance(dtable &dist, int size)
+int longest_distance(const dtable &dist, const int size)
 {
     int length;
     int max_length = 0;
@@ -208,7 +210,7 @@ int longest_distance(dtable &dist, int size)
     return max_length;
 }
 
-void write_citydtable(vector<city> &citylist, dtable &dist)
+void write_citydtable(const vector<city> &citylist, const dtable &dist)
 {
     string fname = "citydtable.txt";
     fstream fout(fname.c_str(), ios::out);
@@ -243,9 +245,9 @@ class edge
     public:
         edge(int);
         ~edge() { delete [] adj; }
-        int * operator[](int i) { return &adj[(i*(i+1))/2]; }
+        int * operator[](int i) const { return &adj[(i*(i+1))/2]; }
         void set_edge(int, int);
-        int get_edge(int, int);
+        int get_edge(int, int) const;
     private:
         int *adj;
 };
@@ -275,7 +277,7 @@ void edge::set_edge(int i, int j)
     return;
 }
 
-int edge::get_edge(int i, int j)
+int edge::get_edge(int i, int j) const
 {
     if (i < j)
     {
@@ -286,7 +288,7 @@ int edge::get_edge(int i, int j)
     return (*this)[i][j]; 
 }
 
-void get_regional_cities(vector<int> &ind, vector<city> &citylist)
+void get_regional_cities(vector<int> &ind, const vector<city> &citylist)
 {
     for (int i = 0; i < (int)(citylist.size()); i++)
     {
@@ -298,7 +300,7 @@ void get_regional_cities(vector<int> &ind, vector<city> &citylist)
     return;
 }
 
-void get_gateway_cities(vector<int> &ind, vector<city> &citylist)
+void get_gateway_cities(vector<int> &ind, const vector<city> &citylist)
 {
     for (int i = 0; i < (int)(citylist.size()); i++)
     {
@@ -310,7 +312,7 @@ void get_gateway_cities(vector<int> &ind, vector<city> &citylist)
     return;
 }
 
-void get_gateways_by_zone(vector< vector<int> > &zones, vector<city> &citylist, vector<int> &gate)
+void get_gateways_by_zone(vector< vector<int> > &zones, const vector<city> &citylist, const vector<int> &gate)
 {
     vector<int> zonex;
     int numzones = 0;
@@ -422,7 +424,7 @@ void create_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
     return;
 }
 
-void write_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
+void write_citygraph(const vector<city> &citylist, const dtable &dist, const edge &graph)
 {
     int linenum_width = floor(log10((int)(citylist.size()))) + 1;
     string fname = "citygraph.txt";
@@ -458,7 +460,7 @@ void write_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
     return;
 }
 
-void bfs_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, vector<city> &citylist, dtable &dist, edge &graph)
+void bfs_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, const vector<city> &citylist, const dtable &dist, const edge &graph)
 {
     if (!vdist.empty())
     {
@@ -503,7 +505,7 @@ void bfs_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, v
 
 typedef enum { WHITE, BLACK } vcolor_t;
 
-void dijkstra_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, vector<city> &citylist, edge &graph, dtable &dist)
+void dijkstra_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, const vector<city> &citylist, const edge &graph, const dtable &dist)
 {
     vector<vcolor_t> vcolor;
     vcolor.assign(citylist.size(), WHITE);
@@ -548,15 +550,18 @@ void dijkstra_route(int source, int sink, vector<float> &vdist, vector<int> &vli
                 float weight = dist(i, k);
                 if (vcolor[k] == WHITE)
                 {
-                    vdist[k] = vdist[i] + weight;
-                    vlink[k] = i;
+                    if (vdist[k] > vdist[i] + weight)
+                    {
+                        vdist[k] = vdist[i] + weight;
+                        vlink[k] = i;
+                    }
                 }
             }
         }
     }
 }
 
-void show_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, vector<city> &citylist, dtable &dist)
+void show_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, const vector<city> &citylist, const dtable &dist)
 {
     int linenum_width = floor(log10((int)(citylist.size()))) + 1;
     if (vdist[sink] == FLT_MAX)
@@ -576,22 +581,17 @@ void show_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, 
     }
     S.push(source);
     D.push(vdist[source]);
+    int city1;
+    float fulldist, prevdist;
     while (!S.empty())
     {
-        int city1, city2;
-        if (S.size() > 1)
+        city1 = S.top();
+        S.pop();
+        if (city1 != source)
         {
-            city1 = S.top();
-            S.pop();
-            city2 = S.top();
+            prevdist = fulldist; 
         }
-        else
-        {
-            city2 = city1;
-            city1 = S.top();
-            S.pop();
-        }
-        float fulldist = D.top();
+        fulldist = D.top();
         D.pop();
         cout << "   " << setw(totaldist_width) << right << fulldist << " miles : "
              << setw(linenum_width) << right << city1 << " "
@@ -602,18 +602,124 @@ void show_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, 
         }
         else
         {
-            cout << "    " << setw(seperationdist_width) << right << dist(city1, city2)
+            cout << "    " << setw(seperationdist_width) << right << fulldist - prevdist
                  << " miles\n"; 
         }
     }
     cout << "\n";
 }
 
-//class rnumgen; <-- COSC307 only
+class rnumgen
+{
+    public:
+        rnumgen(int seed=0);
+        void pdf(const vector<int> &);
+        int rand() const;
+    private:
+        vector<float> F;
+};
+
+rnumgen::rnumgen(int seed)
+{
+    char *byte = (char *)&seed;
+    swap(byte[0], byte[3]);
+    swap(byte[1], byte[2]);
+    unsigned int seedval = *((unsigned int *)byte);
+    srand(seedval);
+}
+
+void rnumgen::pdf(const vector<int> &v)
+{
+    F.resize(v.size());
+    partial_sum(v.begin(), v.end(), F.begin());
+    transform(F.begin(), F.end(), F.begin(), bind2nd(divides<float>(), *(F.end()-1)));
+}
+
+int rnumgen::rand() const
+{
+    const float randnorm = RAND_MAX + 1.0f;
+    const float p = (float)std::rand()/randnorm;
+    return upper_bound(F.begin(), F.end(), p) - F.begin();
+}
+
+int nzones(const vector<city> &citylist)
+{
+    int numzones = 0;
+    for (int i = 0; i < (int)(citylist.size()); i++)
+    {
+        if (citylist[i].get_zone() > numzones)
+        {
+            numzones = citylist[i].get_zone();
+        }
+    }
+    return numzones;
+}
+
+int zone_population(const int zone, const vector<city> &citylist)
+{
+    int pop = 0;
+    for (int i = 0; i < (int)(citylist.size()); i++)
+    {
+        if (citylist[i].get_zone() == zone)
+        {
+            pop += citylist[i].get_population();
+        }
+    }
+    return pop;
+}
+
+int total_population(const vector<city> &citylist)
+{
+    int tpop = 0;
+    for (int i = 0; i < (int)(citylist.size()); i++)
+    {
+        tpop += citylist[i].get_population();
+    }
+    return tpop;
+}
+
+int num_zone_cities(const int zone, const vector<city> &citylist)
+{
+    int num = 0;
+    for (int i = 0; i < (int)(citylist.size()); i++)
+    {
+        if (citylist[i].get_zone() == zone)
+        {
+            num++;
+        }
+    }
+    return num;
+}
+
+void prep_rnumgen(const int numzones, const int tpop, const vector<city> &citylist, rnumgen &random)
+{
+    vector<int> zone_probs;
+    int pop, zone_cities, prob;
+    for (int i = 1; i < numzones + 1; i++)
+    {
+        pop = zone_population(i, citylist);
+        zone_cities = num_zone_cities(i, citylist);
+        prob = (pop/tpop)*(1/zone_cities);
+        zone_probs.push_back(prob);
+    }
+    random.pdf(zone_probs);
+}
+
+int rand_city(const vector<city> &citylist, rnumgen &random)
+{
+    int zone = random.rand(); 
+    int city;
+    do
+    {
+        city = std::rand() % (int)(citylist.size());
+    } while (citylist[city].get_zone() != zone);
+    fprintf(stdout, "City = %s\n", citylist[city].get_name().c_str());
+    return city;
+}
 
 int main(int argc, char *argv[])
 {
-    int flags[7];
+    int flags[8];
     if (argc == 1)
     {
         flags[0] = 1;
@@ -649,6 +755,10 @@ int main(int argc, char *argv[])
             {
                 flags[6] = 1;
             }
+            else if (f == "-randomseed")
+            {
+                flags[7] = 1;
+            }
             else
             {
                 fprintf(stderr, "Usage: ./Citysim -write_info|write_dtable|write_graph|mode_bfs|mode_dijkstra\n");
@@ -680,13 +790,36 @@ int main(int argc, char *argv[])
     int source, sink;
     vector<float> vdist;
     vector<int> vlink;
+    int seed = 0;
+    if (flags[7] == 1)
+    {
+        seed = time(NULL);
+    } 
+    rnumgen RNG(seed);
+    int num_zones = nzones(citylist);
+    int tpop = total_population(citylist);
+    prep_rnumgen(num_zones, tpop, citylist, RNG);
     if (flags[4] == 1 || flags[5] == 1)
     {
         printf("Enter> ");
         while (cin >> city1 >> city2)
         {
-            source = name_dict.upper_bound(city1)->second;
-            sink = name_dict.upper_bound(city2)->second;
+            if (city1 == "*")
+            {
+                source = rand_city(citylist, RNG);
+            }
+            else
+            {
+                source = name_dict.upper_bound(city1)->second;
+            }
+            if (city2 == "*")
+            {
+                sink = rand_city(citylist, RNG);
+            }
+            else
+            {
+                sink = name_dict.upper_bound(city2)->second;
+            }
             if (flags[5] == 1)
             {
                 dijkstra_route(source, sink, vdist, vlink, citylist, graph, dist);
@@ -706,8 +839,5 @@ int main(int argc, char *argv[])
             printf("Enter> ");
         } 
     }
-
-    /*while (not done)
-      shortest_route(from,to)*/
     return 0;
 }
