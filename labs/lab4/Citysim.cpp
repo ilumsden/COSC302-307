@@ -119,7 +119,7 @@ float dtable::operator()(int i, int j)
     return (*this)[i][j]; 
 }
 
-void read_cityinfo(string fname, vector<city> &citylist, map<string, int> name_dict)
+void read_cityinfo(string fname, vector<city> &citylist, map<string, int> &name_dict)
 {
     if (!citylist.empty())
     {
@@ -556,7 +556,7 @@ void dijkstra_route(int source, int sink, vector<float> &vdist, vector<int> &vli
     }
 }
 
-void show_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, vector<city> &citylist)
+void show_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, vector<city> &citylist, dtable &dist)
 {
     int linenum_width = floor(log10((int)(citylist.size()))) + 1;
     if (vdist[sink] == FLT_MAX)
@@ -564,9 +564,12 @@ void show_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, 
         fprintf(stdout, "No path from %s to %s\n", citylist[source].get_name().c_str(), citylist[sink].get_name().c_str());
         return;
     }
+    int totaldist_width = floor(log10((int)(vdist[sink]))) + 1;
+    int name_width = longest_name(citylist) + 3;
+    int seperationdist_width = longest_distance(dist, (int)(citylist.size())); 
     stack<int> S;
     stack<float> D;
-    for (int i = sink, i != source, i = vlink[i])
+    for (int i = sink; i != source; i = vlink[i])
     {
         S.push(i);
         D.push(vdist[i]);
@@ -575,20 +578,42 @@ void show_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, 
     D.push(vdist[source]);
     while (!S.empty())
     {
-        int city1 = S.top();
-        S.pop();
-        int city2 = S.top();
+        int city1, city2;
+        if (S.size() > 1)
+        {
+            city1 = S.top();
+            S.pop();
+            city2 = S.top();
+        }
+        else
+        {
+            city2 = city1;
+            city1 = S.top();
+            S.pop();
+        }
         float fulldist = D.top();
         D.pop();
-        cout << 
+        cout << "   " << setw(totaldist_width) << right << fulldist << " miles : "
+             << setw(linenum_width) << right << city1 << " "
+             << setw(name_width) << left << citylist[city1].get_name();
+        if (city1 == source)
+        {
+            cout << "\n";
+        }
+        else
+        {
+            cout << "    " << setw(seperationdist_width) << right << dist(city1, city2)
+                 << " miles\n"; 
+        }
     }
+    cout << "\n";
 }
 
 //class rnumgen; <-- COSC307 only
 
 int main(int argc, char *argv[])
 {
-    int flags[6];
+    int flags[7];
     if (argc == 1)
     {
         flags[0] = 1;
@@ -620,6 +645,10 @@ int main(int argc, char *argv[])
             {
                 flags[5] = 1;
             }
+            else if (f == "-show")
+            {
+                flags[6] = 1;
+            }
             else
             {
                 fprintf(stderr, "Usage: ./Citysim -write_info|write_dtable|write_graph|mode_bfs|mode_dijkstra\n");
@@ -650,21 +679,31 @@ int main(int argc, char *argv[])
     string city1, city2;
     int source, sink;
     vector<float> vdist;
-    vector<float> vlink;
+    vector<int> vlink;
     if (flags[4] == 1 || flags[5] == 1)
     {
+        printf("Enter> ");
         while (cin >> city1 >> city2)
         {
-            source = map.upper_bound(city1)->second;
-            sink = map.upper_bound(city2)->second;
-            if (flags[4] == 1)
-            {
-                bfs_route(source, sink, vdist, vlink, citylist, dist, graph);
-            }
+            source = name_dict.upper_bound(city1)->second;
+            sink = name_dict.upper_bound(city2)->second;
             if (flags[5] == 1)
             {
                 dijkstra_route(source, sink, vdist, vlink, citylist, graph, dist);
             }
+            if (flags[4] == 1)
+            {
+                bfs_route(source, sink, vdist, vlink, citylist, dist, graph);
+            }
+            if (flags[6] == 1)
+            { 
+                show_route(source, sink, vdist, vlink, citylist, dist);
+            }
+            else
+            {
+                printf("\n");
+            }
+            printf("Enter> ");
         } 
     }
 
