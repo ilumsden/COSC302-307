@@ -9,6 +9,7 @@
 #include <map>
 #include <queue>
 #include <sstream>
+#include <stack>
 #include <utility>
 #include <vector>
 
@@ -457,7 +458,7 @@ void write_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
     return;
 }
 
-void bfs_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, vector<city> &citylist, edge &graph)
+void bfs_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, vector<city> &citylist, dtable &dist, edge &graph)
 {
     if (!vdist.empty())
     {
@@ -487,7 +488,7 @@ void bfs_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, v
             {
                 if (vdist[k] == FLT_MAX)
                 {
-                    vdist[k] = vdist[ind] + 1;
+                    vdist[k] = vdist[ind] + dist(ind, k);
                     vlink[k] = ind;
                     vert.push(k);
                 }
@@ -555,15 +556,39 @@ void dijkstra_route(int source, int sink, vector<float> &vdist, vector<int> &vli
     }
 }
 
-//write_citygraph() { }
+void show_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, vector<city> &citylist)
+{
+    int linenum_width = floor(log10((int)(citylist.size()))) + 1;
+    if (vdist[sink] == FLT_MAX)
+    {
+        fprintf(stdout, "No path from %s to %s\n", citylist[source].get_name().c_str(), citylist[sink].get_name().c_str());
+        return;
+    }
+    stack<int> S;
+    stack<float> D;
+    for (int i = sink, i != source, i = vlink[i])
+    {
+        S.push(i);
+        D.push(vdist[i]);
+    }
+    S.push(source);
+    D.push(vdist[source]);
+    while (!S.empty())
+    {
+        int city1 = S.top();
+        S.pop();
+        int city2 = S.top();
+        float fulldist = D.top();
+        D.pop();
+        cout << 
+    }
+}
 
 //class rnumgen; <-- COSC307 only
 
-//shortest_route() { }
-
 int main(int argc, char *argv[])
 {
-    int flags[5];
+    int flags[6];
     if (argc == 1)
     {
         flags[0] = 1;
@@ -571,6 +596,7 @@ int main(int argc, char *argv[])
     else
     {
         string f;
+        string city1, city2;
         for (int i = 1; i < argc; i++)
         {
             f = argv[i];
@@ -586,9 +612,13 @@ int main(int argc, char *argv[])
             {
                 flags[3] = 1;
             }
-            else if (f == "-mode_bfs" || f == "-mode_dijkstra")
+            else if (f == "-mode_bfs")
             {
                 flags[4] = 1;
+            }
+            else if (f == "-mode_dijkstra")
+            {
+                flags[5] = 1;
             }
             else
             {
@@ -617,24 +647,28 @@ int main(int argc, char *argv[])
     {
         write_citygraph(citylist, dist, graph);
     }
-    if (flags[4] == 1)
+    string city1, city2;
+    int source, sink;
+    vector<float> vdist;
+    vector<float> vlink;
+    if (flags[4] == 1 || flags[5] == 1)
     {
-        fprintf(stderr, "The bfs/dijkstra modes are not yet implemented. Aborting\n");
-        return -5; 
+        while (cin >> city1 >> city2)
+        {
+            source = map.upper_bound(city1)->second;
+            sink = map.upper_bound(city2)->second;
+            if (flags[4] == 1)
+            {
+                bfs_route(source, sink, vdist, vlink, citylist, dist, graph);
+            }
+            if (flags[5] == 1)
+            {
+                dijkstra_route(source, sink, vdist, vlink, citylist, graph, dist);
+            }
+        } 
     }
 
-    /*read_cityinfo()
-    if (option_write_cityinfo) 
-      write_cityinfo()
-
-    create_citygraph()
-    if (option_write_citydtable) 
-      write_citydtable()
-
-    if (option_write_citygraph) 
-      write_citygraph()
-
-    while (not done)
+    /*while (not done)
       shortest_route(from,to)*/
     return 0;
 }
