@@ -609,39 +609,6 @@ void show_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, 
     cout << "\n";
 }
 
-class rnumgen
-{
-    public:
-        rnumgen(int seed=0);
-        void pdf(const vector<int> &);
-        int rand() const;
-    private:
-        vector<float> F;
-};
-
-rnumgen::rnumgen(int seed)
-{
-    char *byte = (char *)&seed;
-    swap(byte[0], byte[3]);
-    swap(byte[1], byte[2]);
-    unsigned int seedval = *((unsigned int *)byte);
-    srand(seedval);
-}
-
-void rnumgen::pdf(const vector<int> &v)
-{
-    F.resize(v.size());
-    partial_sum(v.begin(), v.end(), F.begin());
-    transform(F.begin(), F.end(), F.begin(), bind2nd(divides<float>(), *(F.end()-1)));
-}
-
-int rnumgen::rand() const
-{
-    const float randnorm = RAND_MAX + 1.0f;
-    const float p = (float)std::rand()/randnorm;
-    return upper_bound(F.begin(), F.end(), p) - F.begin();
-}
-
 int nzones(const vector<city> &citylist)
 {
     int numzones = 0;
@@ -691,23 +658,58 @@ int num_zone_cities(const int zone, const vector<city> &citylist)
     return num;
 }
 
-void prep_rnumgen(const int numzones, const int tpop, const vector<city> &citylist, rnumgen &random)
+class rnumgen
 {
-    vector<int> zone_probs;
-    int pop, zone_cities, prob;
+    public:
+        rnumgen(int seed=0);
+        void pdf(const vector<float> &);
+        int rand() const;
+    private:
+        vector<float> F;
+};
+
+rnumgen::rnumgen(int seed)
+{
+    char *byte = (char *)&seed;
+    swap(byte[0], byte[3]);
+    swap(byte[1], byte[2]);
+    int seedval = *((int *)byte);
+    srand(seedval);
+}
+
+void rnumgen::pdf(const vector<float> &v)
+{
+    F.resize(v.size());
+    partial_sum(v.begin(), v.end(), F.begin());
+    transform(F.begin(), F.end(), F.begin(), bind2nd(divides<float>(), *(F.end()-1)));
+}
+
+int rnumgen::rand() const
+{
+    const float randnorm = RAND_MAX + 1.0f;
+    const float p = (float)std::rand()/randnorm;
+    fprintf(stdout, "p = %f\n", p);
+    return upper_bound(F.begin(), F.end(), p) - F.begin();
+}
+
+void prep_rnumgen(const int numzones, const int tpop, const vector<city> &citylist, rnumgen &RNG)
+{
+    vector<float> problist;
+    int pop, zone_cities;
+    float prob;
     for (int i = 1; i < numzones + 1; i++)
     {
         pop = zone_population(i, citylist);
         zone_cities = num_zone_cities(i, citylist);
-        prob = (pop/tpop)*(1/zone_cities);
-        zone_probs.push_back(prob);
+        prob = ((float)(pop)/tpop)*(1.0f/zone_cities);
+        problist.push_back(prob);
     }
-    random.pdf(zone_probs);
+    RNG.pdf(problist);
 }
 
 int rand_city(const vector<city> &citylist, rnumgen &random)
 {
-    int zone = random.rand(); 
+    int zone = random.rand();
     int city;
     do
     {
