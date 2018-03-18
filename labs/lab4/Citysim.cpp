@@ -250,6 +250,10 @@ void write_cityinfo(const vector<city> &citylist)
     return;
 }
 
+/* A simple helper function that determines the longest city name
+ * of the cities in `citylist`.
+ * Used to help with formatting.
+ */
 int longest_name(const vector<city> &citylist)
 {
     int length = 0;
@@ -263,6 +267,10 @@ int longest_name(const vector<city> &citylist)
     return length;
 }
 
+/* A simple helper function that determines the longest distance
+ * between cities.
+ * Used to help with formatting.
+ */
 int longest_distance(const dtable &dist, const int size)
 {
     int length;
