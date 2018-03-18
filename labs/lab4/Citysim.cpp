@@ -21,11 +21,15 @@ const string REG = "REGIONAL";
 const string GAT = "GATEWAY";
 const float PI = 3.1415926535897932384626433;
 
+// A class for storing the data to define a city.
 class city
 {
     public:
         friend istream & operator>>(istream &, city &);
         friend ostream & operator<<(ostream &, const city &);
+        /* Various accessor methods to allow external code to
+         * access the private members.
+         */
         string get_name() const { return name; }
         string get_type() const { return type; }
         int get_zone() const { return zone; }
@@ -33,15 +37,26 @@ class city
         float get_latitude() const { return latitude; }
         float get_longitude() const { return longitude; }
     private:
+        /* name is the name of the city.
+         * type is the type of the city and is either REGIONAL or
+         * GATEWAY.
+         */
         string name, type;
+        /* zone specifies the zone where the city is.
+         * pop is the population of the city.
+         */
         int zone, pop;
         float latitude, longitude;
 };
 
+// This function parses a line from a citylist.txt into a city object.
 istream & operator>>(istream &fin, city &place)
 {
     stringstream sin;
     string tmp;
+    /* This while loop ensures the line being parsed is not
+     * empty or commented out.
+     */
     while (getline(fin, tmp))
     {
         if (tmp[0] != '#' && tmp != "")
@@ -49,10 +64,17 @@ istream & operator>>(istream &fin, city &place)
             break;
         }
     }
+    /* This ensures that the function doesn't try to read extra data after
+     * the End-of-File is reached.
+     */
     if (fin.eof())
     {
         return fin;
     }
+    /* A string stream is used to parse the data from the line into the 
+     * corresponding members of the city object. Before being added to the
+     * city object, the latitude and longitude are converted to radians.
+     */
     sin.str(tmp);
     float lati, longi;
     sin >> place.zone >> place.name >> place.type >> lati >> longi >> place.pop;
@@ -65,8 +87,10 @@ istream & operator>>(istream &fin, city &place)
 
 ostream & operator<<(ostream &fout, const city &place)
 {
+    // The latitude and longitude are converted from radians to degrees.
     float lati = place.latitude * (180/PI);
     float longi = place.longitude * (180/PI);
+    // This prints the city object's data out with correct formatting.
     fout << setw(20) << left << place.name << " "
          << setw(12) << left << place.type << " "
          << setw(2) << right << place.zone << " "
@@ -76,11 +100,19 @@ ostream & operator<<(ostream &fout, const city &place)
     return fout;
 }
 
+/* This class stores the distances between cities.
+ * These distances are accessed as if the data was stored
+ * in a matrix.
+ */
 class dtable
 {
     public:
         dtable(vector<city> &);
+        // Custom destructor to prevent memory leaks.
         ~dtable() { delete [] dist; }
+        /* This function allows the data from the dtable object
+         * to be accessed using 2D array accessing notation.
+         */
         float * operator[](int i) const { return &dist[(i*(i+1))/2]; }
         float operator()(int, int) const;
     private:
@@ -89,9 +121,16 @@ class dtable
 
 dtable::dtable(vector<city> &citylist)
 {
+    /* The internal storage is sized so that a single
+     * vector can be used to emulate a matrix.
+     */
     dist = new float [(citylist.size()*(citylist.size()+1))/2];
     float lat1, lat2, long1, long2;
     float centangle, distance;
+    /* This for loop calculates the great-circle distance between
+     * all the pairs of cities in `citylist` and stores those distances
+     * in the dtable object.
+     */
     for (int i = 0; i < (int)(citylist.size()); i++)
     {
         for (int j = i; j >= 0; j--)
@@ -110,6 +149,9 @@ dtable::dtable(vector<city> &citylist)
     return;
 }
 
+/* This function allows the dtable object to be used like
+ * a function to access the distance between two cities.
+ */
 float dtable::operator()(int i, int j) const
 {
     if (i < j)
@@ -121,8 +163,16 @@ float dtable::operator()(int i, int j) const
     return (*this)[i][j]; 
 }
 
+/* This function opens the file specified by `fname` and uses the
+ * overloaded >> operator for city objects to parse the file's data
+ * into the `citylist` vector. This function also creates a map that
+ * associates the names of the cities with their indicies for `citylist`.
+ */
 void read_cityinfo(string fname, vector<city> &citylist, map<string, int> &name_dict)
 {
+    /* Empties the `citylist` vector and `name_dict`
+     * map if they contain anything.
+     */
     if (!citylist.empty())
     {
         citylist.clear();
@@ -131,7 +181,9 @@ void read_cityinfo(string fname, vector<city> &citylist, map<string, int> &name_
     {
         name_dict.clear();
     }
+    // Opens the file in read-only mode.
     fstream fin(fname.c_str(), ios::in);
+    // Throws an error is the file failed to open.
     if (!fin.is_open())
     {
         fprintf(stderr, "Unable to open %s\n", fname.c_str());
@@ -140,8 +192,15 @@ void read_cityinfo(string fname, vector<city> &citylist, map<string, int> &name_
     }
     city tmp;
     int i = 0;
+    /* This while loop parses the contents of a single
+     * city and adds it to `citylist`. It also adds the 
+     * city and its index to the map.
+     */
     while (fin >> tmp)
     {
+        /* This is a redundancy to ensure that extra data
+         * is not read.
+         */
         if (fin.eof())
         {
             break;
@@ -154,22 +213,34 @@ void read_cityinfo(string fname, vector<city> &citylist, map<string, int> &name_
     return;
 }
 
+/* This function prints the data of the cities in `citylist`
+ * to a file called `cityinfo.txt`.
+ */
 void write_cityinfo(const vector<city> &citylist)
 {
     string fname = "cityinfo.txt";
+    /* If there are no cities to print the info for,
+     * the function simply returns without doing
+     * anything.
+     */
     if (citylist.empty())
     {
         return;
     }
+    // Opens (and creates) the `cityinfo.txt` file in write-only mode.
     fstream fout(fname.c_str(), ios::out);
+    // Throws an error if the file cannot be openned.
     if (!fout.is_open())
     {
         fprintf(stderr, "Unable to open/create %s\n", fname.c_str());
         fout.close();
         exit(-2);
     }
+    // Prints the header info.
     fout << "CITY INFO (N=" << (int)(citylist.size()) << "):\n\n";
+    // `linenum_width` is used to control the width of the city number.
     int linenum_width = floor(log10((int)(citylist.size()))) + 1;
+    // Prints the city number and city data for each city in `citylist`.
     for (int i = 0; i < (int)(citylist.size()); i++)
     {
         fout << " " << setw(linenum_width) << right << i << " ";
