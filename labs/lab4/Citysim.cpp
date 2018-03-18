@@ -661,7 +661,7 @@ int num_zone_cities(const int zone, const vector<city> &citylist)
 class rnumgen
 {
     public:
-        rnumgen(int seed=0);
+        rnumgen(int seed);
         void pdf(const vector<float> &);
         int rand() const;
     private:
@@ -688,7 +688,6 @@ int rnumgen::rand() const
 {
     const float randnorm = RAND_MAX + 1.0f;
     const float p = (float)std::rand()/randnorm;
-    fprintf(stdout, "p = %f\n", p);
     return upper_bound(F.begin(), F.end(), p) - F.begin();
 }
 
