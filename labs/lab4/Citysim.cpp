@@ -646,6 +646,7 @@ void write_citygraph(const vector<city> &citylist, const dtable &dist, const edg
  */
 void bfs_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, const vector<city> &citylist, const dtable &dist, const edge &graph)
 {
+    // Clears the vectors if they have any contents.
     if (!vdist.empty())
     {
         vdist.clear();
@@ -654,6 +655,9 @@ void bfs_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, c
     {
         vlink.clear();
     }
+    /* Default values are assigned to the vectors.
+     * This is necessary because these defaults are assumed in the remainder of the code.
+     */
     vdist.assign(citylist.size(), FLT_MAX);
     vlink.assign(citylist.size(), -1);
     vdist[source] = 0;
