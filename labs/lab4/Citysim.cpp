@@ -289,21 +289,35 @@ int longest_distance(const dtable &dist, const int size)
     return max_length;
 }
 
+/* This function writes the formatted contents of a dtable object
+ * to a "citydtable.txt" file.
+ */
 void write_citydtable(const vector<city> &citylist, const dtable &dist)
 {
     string fname = "citydtable.txt";
+    // Opens and creates the "citydtable.txt" file.
     fstream fout(fname.c_str(), ios::out);
+    // Throws an error if the file could not be openned/created.
     if (!fout.is_open())
     {
         fprintf(stderr, "Unable to open/create %s\n", fname.c_str());
         fout.close();
         exit(-4);
     }
+    /* Obtains multiple integers for formatting purposes.
+     * `width` is the length of the longest name.
+     * `mile_length` is the textual length of the largest distance.
+     * `linenum_width` is used to control the width of the city number.
+     */
     int width = longest_name(citylist);
     int mile_length = longest_distance(dist, (int)(citylist.size()));
     string name, distance;
     int linenum_width = floor(log10((int)(citylist.size()))) + 1;
+    // Prints the header.
     fout << "DISTANCE TABLE:\n\n";
+    /* Goes through each pair of cities and prints a formatted string
+     * stating the cities and the distance between them.
+     */
     for (int i = 1; i < (int)(citylist.size()); i++)
     {
         for (int j = 0; j < i; j++)
@@ -319,11 +333,16 @@ void write_citydtable(const vector<city> &citylist, const dtable &dist)
     return;
 }
 
+// A class used to store the adjacencies in the "graph"
 class edge
 {
     public:
         edge(int);
+        // Custom destructor to prevent memory leak.
         ~edge() { delete [] adj; }
+        /* Square bracket-access operator to allow for
+         * array-based lookup of the adjacencies.
+         */
         int * operator[](int i) const { return &adj[(i*(i+1))/2]; }
         void set_edge(int, int);
         int get_edge(int, int) const;
@@ -331,6 +350,10 @@ class edge
         int *adj;
 };
 
+/* Custom constructor for the edge class.
+ * This function sizes the `adj` array appropriately
+ * for simulated matrix-style lookup and storage.
+ */
 edge::edge(int num_cities)
 {
     adj = new int[(num_cities*(num_cities+1))/2];
@@ -344,6 +367,9 @@ edge::edge(int num_cities)
     }
 }
 
+/* This function sets an adjacency between the two cities
+ * specified by the int parameters.
+ */
 void edge::set_edge(int i, int j)
 {
     if (i < j)
@@ -356,6 +382,10 @@ void edge::set_edge(int i, int j)
     return;
 }
 
+/* This function returns 1 if there is an adjacency
+ * between the two cities specified by the int
+ * parameters. Otherwise, it should return 0.
+ */
 int edge::get_edge(int i, int j) const
 {
     if (i < j)
@@ -367,6 +397,10 @@ int edge::get_edge(int i, int j) const
     return (*this)[i][j]; 
 }
 
+/* This function generates a vector of ints (initially passed
+ * into the function by-reference) that is filled with the 
+ * citylist indices corresponding to REGIONAL cities.
+ */
 void get_regional_cities(vector<int> &ind, const vector<city> &citylist)
 {
     for (int i = 0; i < (int)(citylist.size()); i++)
@@ -379,6 +413,10 @@ void get_regional_cities(vector<int> &ind, const vector<city> &citylist)
     return;
 }
 
+/* This function generates a vector of ints (initially passed
+ * into the function by-reference) that is filled with the 
+ * citylist indices corresponding to GATEWAY cities.
+ */
 void get_gateway_cities(vector<int> &ind, const vector<city> &citylist)
 {
     for (int i = 0; i < (int)(citylist.size()); i++)
@@ -391,6 +429,11 @@ void get_gateway_cities(vector<int> &ind, const vector<city> &citylist)
     return;
 }
 
+/* This function fills the `zone` vector with the indicies of the gateway cities
+ * separated by zones. In other words, the contents of `zones[0]` would be
+ * the indicies of the gateway cities in Zone 1; the contents of `zones[1] would
+ * be the indicies of the gateway cities in Zone 2; etc.
+ */
 void get_gateways_by_zone(vector< vector<int> > &zones, const vector<city> &citylist, const vector<int> &gate)
 {
     vector<int> zonex;
@@ -399,6 +442,7 @@ void get_gateways_by_zone(vector< vector<int> > &zones, const vector<city> &city
     {
         zones.clear();
     }
+    // This loop determines the total number of zones.
     for (int i = 0; i < (int)(citylist.size()); i++)
     {
         if (citylist[i].get_zone() > numzones)
@@ -407,6 +451,9 @@ void get_gateways_by_zone(vector< vector<int> > &zones, const vector<city> &city
         }
     }
     int curr;
+    /* This loop goes through all the gateway cities and adds
+     * them to the vector of ints corresponding to the city's zone.
+     */
     for (int i = 0; i < numzones; i++)
     {
         for (int j = 0; j < (int)(gate.size()); j++)
@@ -423,6 +470,10 @@ void get_gateways_by_zone(vector< vector<int> > &zones, const vector<city> &city
     return;
 }
 
+/* This function generates the "graph" (i.e. fills the edge object)
+ * by determining which cities are adjacent. It then sets the corresponding
+ * element in the edge object.
+ */
 void create_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
 {
     vector<int> reg;
@@ -651,6 +702,16 @@ void show_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, 
     int totaldist_width = floor(log10((int)(vdist[sink]))) + 1;
     int name_width = longest_name(citylist) + 3;
     int seperationdist_width = longest_distance(dist, (int)(citylist.size())); 
+    if (source == sink)
+    {
+        cout << setw(linenum_width) << right << source << " "
+             << citylist[source].get_name() << " to "
+             << setw(linenum_width) << right << sink << " "
+             << citylist[sink].get_name() << " :  "
+             << setw(totaldist_width) << right << "0"
+             << " miles\n";
+        return;
+    }
     stack<int> S;
     stack<float> D;
     for (int i = sink; i != source; i = vlink[i])
@@ -741,7 +802,7 @@ class rnumgen
 {
     public:
         rnumgen(int seed);
-        void pdf(const vector<float> &);
+        void pdf(const vector<float> &, const vector<city> &);
         int rand() const;
     private:
         vector<float> F;
@@ -756,10 +817,16 @@ rnumgen::rnumgen(int seed)
     srand(seedval);
 }
 
-void rnumgen::pdf(const vector<float> &v)
+void rnumgen::pdf(const vector<float> &v, const vector<city> &citylist)
 {
-    F.resize(v.size());
-    partial_sum(v.begin(), v.end(), F.begin());
+    F.resize(citylist.size());
+    int zone;
+    for (int i = 0; i < (int)(citylist.size()); i++)
+    {
+        zone = citylist[i].get_zone();
+        F.push_back(v[zone-1]);
+    }
+    partial_sum(F.begin(), F.end(), F.begin());
     transform(F.begin(), F.end(), F.begin(), bind2nd(divides<float>(), *(F.end()-1)));
 }
 
@@ -779,22 +846,10 @@ void prep_rnumgen(const int numzones, const int tpop, const vector<city> &cityli
     {
         pop = zone_population(i, citylist);
         zone_cities = num_zone_cities(i, citylist);
-        prob = ((float)(pop)/tpop)*(1.0f/zone_cities);
+        prob = (((float)(pop))/tpop)*(1.0f/((float)(zone_cities)));
         problist.push_back(prob);
     }
-    RNG.pdf(problist);
-}
-
-int rand_city(const vector<city> &citylist, rnumgen &random)
-{
-    int zone = random.rand();
-    int city;
-    do
-    {
-        city = std::rand() % (int)(citylist.size());
-    } while (citylist[city].get_zone() != zone);
-    fprintf(stdout, "City = %s\n", citylist[city].get_name().c_str());
-    return city;
+    RNG.pdf(problist, citylist);
 }
 
 int main(int argc, char *argv[])
@@ -886,19 +941,33 @@ int main(int argc, char *argv[])
         {
             if (city1 == "*")
             {
-                source = rand_city(citylist, RNG);
+                source = RNG.rand() % (int)(citylist.size());
             }
             else
             {
-                source = name_dict.upper_bound(city1)->second;
+                if (!name_dict.count(city1))
+                {
+                    source = name_dict.upper_bound(city1)->second;
+                }
+                else
+                {
+                    source = name_dict.find(city1)->second;
+                }
             }
             if (city2 == "*")
             {
-                sink = rand_city(citylist, RNG);
+                sink = RNG.rand() % (int)(citylist.size());
             }
             else
             {
-                sink = name_dict.upper_bound(city2)->second;
+                if (!name_dict.count(city2))
+                {
+                    sink = name_dict.upper_bound(city2)->second;
+                }
+                else
+                {
+                    sink = name_dict.find(city2)->second;
+                }
             }
             if (flags[5] == 1)
             {
