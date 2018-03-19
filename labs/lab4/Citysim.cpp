@@ -476,19 +476,35 @@ void get_gateways_by_zone(vector< vector<int> > &zones, const vector<city> &city
  */
 void create_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
 {
+    /* The `get_regional_cities` and `get_gateway_cities` helper
+     * functions are used to obtain vectors of the citylist indicies
+     * for regional and gateway cities respectively.
+     */
     vector<int> reg;
     vector<int> gate;
     get_regional_cities(reg, citylist);
     get_gateway_cities(gate, citylist);
+    /* `base` is the current source city for determining adjacencies.
+     * `curr` is the current candidate city for an adjacency.
+     */
     int base, curr;
+    /* `min_dist` is the smallest distance between a gateway city and `base`.
+     * `min_ind` is the citylist index corresponding to `min_dist`.
+     */
     float min_dist;
     int min_ind;
+    // This loop controls `base`.
     for (int i = 0; i < (int)(reg.size()); i++)
     {
         base = reg[i];
+        // This loop controls `curr`.
         for (int j = i+1; j < (int)(reg.size()); j++)
         {
             curr = reg[j];
+            /* If `base` and `curr` (both currently regional cities) are in
+             * the same zone, they are adjacent, and the corresponding element
+             * in the edge object is set.
+             */
             if (citylist[base].get_zone() == citylist[curr].get_zone())
             {
                 graph.set_edge(base, curr);
@@ -496,6 +512,10 @@ void create_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
         }
         min_ind = -1;
         min_dist = FLT_MAX;
+        /* This block determines the closest gateway city to `base` that
+         * is in the same zone as `base`. Once this city is determined,
+         * the corresponding element in the edge object is set.
+         */
         for (int k = 0; k < (int)(gate.size()); k++)
         {
             curr = gate[k];
@@ -513,6 +533,9 @@ void create_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
             graph.set_edge(base, min_ind);
         }
     }
+    /* `zones` is used to store the output of the `get_gateways_by_zone` function.
+     * `zonex` is used to store the citylist indicies of the gateway cities is zone "x".
+     */
     vector< vector<int> > zones;
     vector<int> zonex;
     get_gateways_by_zone(zones, citylist, gate);
@@ -522,11 +545,20 @@ void create_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
         for (int j = i+1; j < (int)(gate.size()); j++)
         {
             curr = gate[j];
+            /* If `base` and `curr` (both gateway cities) are in the same
+             * zone, they are adjacent, and the corresponding element of the 
+             * edge object is set.
+             */
             if (citylist[base].get_zone() == citylist[curr].get_zone())
             {
                 graph.set_edge(base, curr);
             }
         }
+        /* This for loop determines the gateway city in each zone (excluding
+         * `base`'s zone) that is closest to `base` with a distance under 6000 miles.
+         * Each of these cities are considered adjacent to `base`, and the corresponding
+         * elements in the edge object are set.
+         */
         for (int k = 0; k < (int)(zones.size()); k++)
         {
             if (citylist[base].get_zone() == k+1)
@@ -554,12 +586,28 @@ void create_citygraph(vector<city> &citylist, dtable &dist, edge &graph)
     return;
 }
 
+/* This function prints the contents of the "graph"
+ * into a file named "citygraph.txt".
+ */
 void write_citygraph(const vector<city> &citylist, const dtable &dist, const edge &graph)
 {
+    // `linenum_width` is an integer used for formating the city number.
     int linenum_width = floor(log10((int)(citylist.size()))) + 1;
     string fname = "citygraph.txt";
+    // Opens and creates "citygraph.txt" in write mode.
     fstream fout(fname.c_str(), ios::out);
+    // Throws an error if the file could not be openned/created.
+    if (!fout.is_open())
+    {
+        fprintf(stderr, "Unable to open/create %s\n", fname.c_str());
+        fout.close();
+        exit(-5);
+    }
+    // Prints the header
     fout << "CITY GRAPH:\n\n";
+    /* Loops through each city, and prints the city and its
+     * adjacencies with correct formatting.
+     */
     for (int i = 0; i < (int)(citylist.size()); i++)
     {
         fout << " " << setw(linenum_width) << right << i << " " << citylist[i].get_name() << "\n";
@@ -590,6 +638,12 @@ void write_citygraph(const vector<city> &citylist, const dtable &dist, const edg
     return;
 }
 
+/* This function uses a BFS traversal of the "graph" to determine
+ * the shortest distance between source and sink in terms of number of edges.
+ * In other words, the path returned by this function will traverse the fewest
+ * number of edges of any possible path, even if it is not the shortest total
+ * distance.
+ */
 void bfs_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, const vector<city> &citylist, const dtable &dist, const edge &graph)
 {
     if (!vdist.empty())
@@ -633,8 +687,14 @@ void bfs_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, c
     }
 }
 
+// An enum to be used to controll vertex selection in the Dijkstra function. 
 typedef enum { WHITE, BLACK } vcolor_t;
 
+/* This function uses Dijkstra's Algorithm to determine the path
+ * between source and sink with the shortest distance travelled.
+ * Unlike `bfs_route`, this algorithm bases its definition of "shortest path"
+ * on the actual distance of the path, rather than the number of edges traversed.
+ */
 void dijkstra_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, const vector<city> &citylist, const edge &graph, const dtable &dist)
 {
     vector<vcolor_t> vcolor;
@@ -691,6 +751,7 @@ void dijkstra_route(int source, int sink, vector<float> &vdist, vector<int> &vli
     }
 }
 
+// This function prints the route data to the console.
 void show_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, const vector<city> &citylist, const dtable &dist)
 {
     int linenum_width = floor(log10((int)(citylist.size()))) + 1;
@@ -749,6 +810,9 @@ void show_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, 
     cout << "\n";
 }
 
+/* This helper function calculates the total number
+ * of zones in citylist.
+ */
 int nzones(const vector<city> &citylist)
 {
     int numzones = 0;
@@ -762,6 +826,9 @@ int nzones(const vector<city> &citylist)
     return numzones;
 }
 
+/* This helper function determines the total population
+ * of the specified zone.
+ */
 int zone_population(const int zone, const vector<city> &citylist)
 {
     int pop = 0;
@@ -775,6 +842,9 @@ int zone_population(const int zone, const vector<city> &citylist)
     return pop;
 }
 
+/* This helper function calculates the total population
+ * of all the cities in citylist.
+ */
 int total_population(const vector<city> &citylist)
 {
     int tpop = 0;
@@ -785,6 +855,9 @@ int total_population(const vector<city> &citylist)
     return tpop;
 }
 
+/* This helper function determines the number of
+ * cities in the specified zone.
+ */
 int num_zone_cities(const int zone, const vector<city> &citylist)
 {
     int num = 0;
@@ -798,6 +871,10 @@ int num_zone_cities(const int zone, const vector<city> &citylist)
     return num;
 }
 
+/* This class is used to generate random citylist indicies
+ * according to the probabilities passed in through the
+ * vector of floats passed to `pdf`.
+ */
 class rnumgen
 {
     public:
@@ -808,6 +885,9 @@ class rnumgen
         vector<float> F;
 };
 
+/* This function seeds the random number generator using
+ * a manipulated version of the passed seed.
+ */
 rnumgen::rnumgen(int seed)
 {
     char *byte = (char *)&seed;
