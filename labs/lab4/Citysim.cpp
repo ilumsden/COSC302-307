@@ -18,6 +18,23 @@
 
 using namespace std;
 
+/*
+ * Citysim.cpp
+ * Author: Ian Lumsden
+ * Date: March 20, 2018
+ *
+ * This program reads data from the "citylist.txt" file in the CWD of the executable.
+ * It then does various things depending on the flags provided:
+ *     * "-write_info": the program will print the data read from "citylist.txt" into "cityinfo.txt" with special formatting
+ *     * "-write_dtable": the program calculates the distances between all the cities and print this data into "citydtable.txt" 
+ *     * "-write_graph": the program creates a graph of the cities and prints the graph's data to "citygraph.txt"
+ *     * "-randomseed": when using the "-mode_bfs" or "-mode_dijkstra" flags, the user can specify a random city with "*". This flag will cause the random number generator that chooses a city for a "*" to be seeded with `time(NULL)` instead of 0.
+ *     * "-mode_bfs": the program will determine the shortest route in terms of number of graph edges traversed between the cities specified by the user.
+ *     * "-mode_dijkstra": the program will determine the shortest route in terms of distance travelled between the cities specified by the user.
+ *     * "-show": the program will print the details of the BFS or Dijkstra route to stdout.
+ */
+
+// These constants are used for comparison and basic calculation purposes.
 const string REG = "REGIONAL";
 const string GAT = "GATEWAY";
 const float PI = 3.1415926535897932384626433;
