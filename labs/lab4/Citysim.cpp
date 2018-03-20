@@ -669,6 +669,10 @@ void bfs_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, c
      */
     queue<int> vert;
     vert.push(source);
+    /* For each city that is not `sink`, the city is removed from `vert`, and its adjacencies are added to `vert`. 
+     * Also, the `vdist` value for the adjacencies are updated to be the total distance from `source` along the current
+     * route.
+     */
     while (!vert.empty())
     {
         int ind = vert.front();
@@ -690,6 +694,7 @@ void bfs_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, c
             }
         }
     }
+    // This empties `vert` if `sink` was reached before `vert` was empty.
     while (!vert.empty())
     {
         vert.pop();
@@ -706,8 +711,13 @@ typedef enum { WHITE, BLACK } vcolor_t;
  */
 void dijkstra_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, const vector<city> &citylist, const edge &graph, const dtable &dist)
 {
+    /* `vcolor` is a vector of `vcolor_t` enums used to keep track of which nodes have already
+     * been visited. If a node is WHITE, it has not yet been visited. If a node is BLACK, it has already
+     * been visited.
+     */
     vector<vcolor_t> vcolor;
     vcolor.assign(citylist.size(), WHITE);
+    // `vdist` and `vlink` are both filled with their default, assumed values.
     if (!vdist.empty())
     {
         vdist.clear();
@@ -722,6 +732,11 @@ void dijkstra_route(int source, int sink, vector<float> &vdist, vector<int> &vli
     vlink[source] = source;
     while (1)
     {
+        /* This block determines the next step in the route by determining the shortest distance
+         * from `source`. The first time through the while loop, the city selected will always be
+         * `source`. Otherwise, the city selected will be the unvisited city with the smallest distance
+         * from `source`. If no city is found that meets these criteria, the function simply returns.
+         */
         int i;
         int i_mindist = -1;
         float mindist = FLT_MAX;
@@ -737,11 +752,17 @@ void dijkstra_route(int source, int sink, vector<float> &vdist, vector<int> &vli
         {
             return;
         }
+        // The color of the current city is set to BLACK to state that the city has been visited.
         vcolor[i] = BLACK;
+        // The loop is broken when the route reaches `sink`.
         if (i == sink)
         {
             break;
         }
+        /* For each WHITE adjacency of the current city, the adjacency's `vdist` value is set to
+         * be the distance from `source` of the current city plus the distance between the current
+         * city and the adjacency.
+         */
         for (int k = 0; k < (int)(citylist.size()); k++)
         {
             if (graph.get_edge(i, k) == 1)
@@ -763,15 +784,24 @@ void dijkstra_route(int source, int sink, vector<float> &vdist, vector<int> &vli
 // This function prints the route data to the console.
 void show_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, const vector<city> &citylist, const dtable &dist)
 {
+    // `linenum_width` is an int used for formatting the city number.
     int linenum_width = floor(log10((int)(citylist.size()))) + 1;
+    /* If the distance between `source` and `sink` is FLT_MAX, there is no path from
+     * `source` to `sink`. So, an error message is printed to stdout, and the function returns.
+     */
     if (vdist[sink] == FLT_MAX)
     {
         fprintf(stdout, "No path from %s to %s\n", citylist[source].get_name().c_str(), citylist[sink].get_name().c_str());
         return;
     }
+    // More ints for formatting
     int totaldist_width = floor(log10((int)(vdist[sink]))) + 1;
     int name_width = longest_name(citylist) + 3;
     int seperationdist_width = longest_distance(dist, (int)(citylist.size())); 
+    /* If `source` is the same as `sink`, a special line is printed to state that
+     * the cities are the same. This line is printed to ensure that the output matches
+     * that of the solution executable.
+     */
     if (source == sink)
     {
         cout << setw(linenum_width) << right << source << " "
@@ -782,7 +812,11 @@ void show_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, 
              << " miles\n";
         return;
     }
+    /* `S` is a stack used to store the cities on the route between `source` and `sink`.
+     * The bottom of the stack is `sink`, and the top of the stack is `source`.
+     */
     stack<int> S;
+    // `D` is a stack used to store the distances from `source` for each city in `S`.
     stack<float> D;
     for (int i = sink; i != source; i = vlink[i])
     {
@@ -791,21 +825,34 @@ void show_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, 
     }
     S.push(source);
     D.push(vdist[source]);
+    // `city1` is the index for the current city.
     int city1;
+    /* `fulldist` is the distance from `source` of the current city.
+     * `prevdist` is the distance from `source` of the previous city.
+     */
     float fulldist, prevdist;
     while (!S.empty())
     {
         city1 = S.top();
         S.pop();
+        /* This if statement ensures that there are not issues with trying to
+         * perform this assignment on the first iteration, when fulldist does not have a
+         * meaningful value.
+         */
         if (city1 != source)
         {
             prevdist = fulldist; 
         }
         fulldist = D.top();
         D.pop();
+        // Prints the base content of each line (city, full distance, etc.).
         cout << "   " << setw(totaldist_width) << right << fulldist << " miles : "
              << setw(linenum_width) << right << city1 << " "
              << setw(name_width) << left << citylist[city1].get_name();
+        /* If the current city is the source, there is no additional information that needs
+         * to be printed, so only a new line is printed. Otherwise, the distance between the
+         * current city and the previous city is printed (fulldist - prevdist).
+         */
         if (city1 == source)
         {
             cout << "\n";
