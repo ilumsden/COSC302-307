@@ -661,8 +661,12 @@ void bfs_route(int source, int sink, vector<float> &vdist, vector<int> &vlink, c
      */
     vdist.assign(citylist.size(), FLT_MAX);
     vlink.assign(citylist.size(), -1);
+    // Assigns the default values for `source`.
     vdist[source] = 0;
     vlink[source] = source;
+    /* `vert` is used to store the cities under consideration for the next step of the route.
+     * Initially, it only contains `source.
+     */
     queue<int> vert;
     vert.push(source);
     while (!vert.empty())
