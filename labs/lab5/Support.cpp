@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdio>
 #include <utility>
 
@@ -5,94 +6,55 @@ using namespace std;
 
 #include "Support.h"
 
-pairs::pairs(int maze_size, int nc)
+dset::dset(int num_sets)
 {
-    size = maze_size;
-    Ncols = nc;
-    pairlist = new int[maze_size];
-    for (int i = 0; i < size; i++)
-    {   
-        pairlist[i] = false;
-    }
-}
-void pairs::set_pair(int i1, int j1, int i2, int j2)
-{
-    int ind1 = i1*Ncols + j1;
-    int ind2 = i2*Ncols + j2;
-    (*this)[ind1][ind2] = true;
-}
-bool pairs::get_pair(int i1, int j1, int i2, int j2)
-{
-    int ind1 = i1*Ncols + j1;
-    int ind2 = i2*Ncols + j2;
-    return (*this)[ind1][ind2];
+    S.assign(N, node());
+    Nsets = N;
 }
 
-void set_t::create_set(pair<int, int> cell)
+int dset::add_set()
 {
-    if (!data.empty())
+    S.insert(S.end(), 1, node());
+    Nsets += 1;
+    return S.size()-1;
+}
+
+int dset::merge(int i, int j)
+{
+    i = this->find(i);
+    j = this->find(j);
+    if (i != j)
     {
-        return;
-    }
-    data.push_front(cell);
-}
-
-void set_t::add_to_set(pair<int, int> cell)
-{
-    data.push_front(cell);
-}
-
-pair<int, int> * set_t::get_rep(pair<int, int> cell)
-{
-    list< pair<int, int> >::iterator i = data.begin();
-    while (i != data.end())
-    {
-        if (*i == cell)
+        node &Si = S[i];
+        node &Sj = S[j];
+        if (Si.rank > Sj.rank)
         {
-            return rep;
+            Sj.parent = i;
         }
-    }
-    return NULL;
-}
-
-set_t * disjoint_set::find_set(int i, int j)
-{
-    pair<int, int> *rep;
-    for (int i = 0; i < (int)(dis.size()); i++)
-    {
-        rep = dis[i].get_rep(make_pair(i, j));
-        if (rep != NULL)
+        else if (Si.rank < Sj.rank)
         {
-            for (int j = 0; j < (int)(dis.size()); j++)
-            {
-                if (rep == &dis[j])
-                {
-                    return &dis[j];
-                }
-            }
+            Si.parent = j;
         }
+        else
+        {
+            Sj.parent = i;
+            Si.rank += 1;
+        }
+        Nsets -= i;
     }
-    return NULL;
+    return this->find(i);
 }
 
-void disjoint_set::create_set(int i, int j)
+int dset::find(int i)
 {
-    if (find_set(i, j) != NULL)
+    if (S[i].parent == -1)
     {
-        return;
+        return i;
     }
-    set_t s;
-    s.create_set(make_pair(i, j));
-    dis.push_back(s);
+    S[i].parent = find(S[i].parent);
+    return S[i].parent;
 }
 
-void disjoint_set::merge_set(int i1, int j1, int i2, int j2)
-{
-    set_t *rep1 = find_set(i1, j1);
-    set_t *rep2 = find_set(i2, j2);
-    
-}
-             
 maze::~maze()
 {
     for (int i = 0; i < size; i++)
@@ -115,15 +77,29 @@ void maze::create_maze(int nr, int nc)
             grid[i][j] = true;
         }
     }
-    pairs pairlist(size, Ncols);
-    for (int i = 1; i < Nrows - 1; i++)
+    vector< pair<int, int> > interior;
+    int ind, left, right, up, down;
+    for (int i = 0; i < Nrows; i++)
     {
-        for (int j = 1; i < Ncols - 1; j++)
+        for (int j = 0; i < Ncols; j++)
         {
-            pairlist.set_pair(i, j, i-1, j);
-            pairlist.set_pair(i, j, i, j-1);
-            pairlist.set_pair(i, j, i+1, j);
-            pairlist.set_pair(i, j, i, j+1);
+            ind = i*Ncols + j;
+            if (i != 0)
+            {
+                interior.push_back(make_pair(ind, 0));
+            }
+            if (j != 0)
+            {
+                interior.push_back(make_pair(ind, 1));
+            }
+            if (i != Nrows - 1)
+            {
+                interior.push_back(make_pair(ind, 2));
+            }
+            if (j != Ncols - 1)
+            {
+                interior.push_back(make_pair(ind, 3));
+            }
         }
     }
 }

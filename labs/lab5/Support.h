@@ -1,18 +1,4 @@
-#include <list>
 #include <vector>
-
-class pairs
-{
-    public:
-        pairs(int);
-        ~pairs() { delete [] pairlist; }
-        void set_pair(int, int, int, int);
-        bool get_pair(int, int, int, int);
-    private:
-        bool *pairlist;
-        int Ncols;
-        int * operator[](int i) const { return &pairlist[(i*(i+1))/2]; }
-};
 
 class maze
 {
@@ -27,24 +13,21 @@ class maze
         int size;
 };
 
-class set_t
+class dset
 {
+    struct node
+    {
+        node() { rank = 0; parent = -1; }
+        int rank;
+        int parent;
+    };
     public:
-        void create_set(pair<int, int>);
-        void add_to_set(pair<int, int>);
-        pair<int, int> * get_rep(pair<int, int>);
-        void merge(set_t);
+        dset(int num_sets);
+        int size() const { return Nsets; }
+        int add_set();
+        int merge(int, int);
+        int find(int);
     private:
-        list< pair<int, int> > data;
-        pair<int, int> *rep;
-};
-
-class disjoint_set
-{
-    public:
-        set_t * find_set(int, int);
-        void create_set(int, int);
-        void merge_set(int, int, int, int);
-    private:
-        vector<set_t> dis;
+        int Nsets;
+        std::vector<node> S;
 };
