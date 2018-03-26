@@ -1,3 +1,5 @@
+#include <list>
+
 class pairs
 {
     public:
@@ -22,4 +24,24 @@ class maze
         bool **grid;
         int Nrows, Ncols;
         int size;
+};
+
+class set_t
+{
+    public:
+        void create_set(pair<int, int>);
+        void add_to_set(pair<int, int>);
+    private:
+        list< pair<int, int> > data;
+        pair<int, int> *rep;
+};
+
+class disjoint_set
+{
+    public:
+        void create_set(int, int);
+        pair<int, int> * find_set(int, int);
+        void merge_set(int, int, int, int);
+    private:
+        vector<set_t> dis;
 };
