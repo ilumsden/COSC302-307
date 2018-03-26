@@ -1,4 +1,5 @@
 #include <list>
+#include <vector>
 
 class pairs
 {
@@ -31,6 +32,7 @@ class set_t
     public:
         void create_set(pair<int, int>);
         void add_to_set(pair<int, int>);
+        pair<int, int> * get_rep(pair<int, int>);
     private:
         list< pair<int, int> > data;
         pair<int, int> *rep;
