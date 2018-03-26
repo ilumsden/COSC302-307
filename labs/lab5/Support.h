@@ -33,6 +33,7 @@ class set_t
         void create_set(pair<int, int>);
         void add_to_set(pair<int, int>);
         pair<int, int> * get_rep(pair<int, int>);
+        void merge(set_t);
     private:
         list< pair<int, int> > data;
         pair<int, int> *rep;
@@ -41,8 +42,8 @@ class set_t
 class disjoint_set
 {
     public:
+        set_t * find_set(int, int);
         void create_set(int, int);
-        pair<int, int> * find_set(int, int);
         void merge_set(int, int, int, int);
     private:
         vector<set_t> dis;
