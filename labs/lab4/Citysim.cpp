@@ -18,6 +18,23 @@
 
 using namespace std;
 
+/*
+ * Citysim.cpp
+ * Author: Ian Lumsden
+ * Date: March 20, 2018
+ *
+ * This program reads data from the "citylist.txt" file in the CWD of the executable.
+ * It then does various things depending on the flags provided:
+ *     * "-write_info": the program will print the data read from "citylist.txt" into "cityinfo.txt" with special formatting
+ *     * "-write_dtable": the program calculates the distances between all the cities and print this data into "citydtable.txt" 
+ *     * "-write_graph": the program creates a graph of the cities and prints the graph's data to "citygraph.txt"
+ *     * "-randomseed": when using the "-mode_bfs" or "-mode_dijkstra" flags, the user can specify a random city with "*". This flag will cause the random number generator that chooses a city for a "*" to be seeded with `time(NULL)` instead of 0.
+ *     * "-mode_bfs": the program will determine the shortest route in terms of number of graph edges traversed between the cities specified by the user.
+ *     * "-mode_dijkstra": the program will determine the shortest route in terms of distance travelled between the cities specified by the user.
+ *     * "-show": the program will print the details of the BFS or Dijkstra route to stdout.
+ */
+
+// These constants are used for comparison and basic calculation purposes.
 const string REG = "REGIONAL";
 const string GAT = "GATEWAY";
 const float PI = 3.1415926535897932384626433;
@@ -953,6 +970,9 @@ rnumgen::rnumgen(int seed)
     srand(seedval);
 }
 
+/* This function sets the internal probability vector with the probabilities of
+ * each city.
+ */
 void rnumgen::pdf(const vector<float> &v, const vector<city> &citylist)
 {
     F.resize(citylist.size());
@@ -966,6 +986,7 @@ void rnumgen::pdf(const vector<float> &v, const vector<city> &citylist)
     transform(F.begin(), F.end(), F.begin(), bind2nd(divides<float>(), *(F.end()-1)));
 }
 
+// This function uses the internal probability vector to generate a random number.
 int rnumgen::rand() const
 {
     const float randnorm = RAND_MAX + 1.0f;
@@ -973,11 +994,13 @@ int rnumgen::rand() const
     return upper_bound(F.begin(), F.end(), p) - F.begin();
 }
 
+// This function creates the initial probability vector that it passes into rnumgen::pdf
 void prep_rnumgen(const int numzones, const int tpop, const vector<city> &citylist, rnumgen &RNG)
 {
     vector<float> problist;
     int pop, zone_cities;
     float prob;
+    // This for loop calculates the probability of a city in each zone and adds it to `problist`.
     for (int i = 1; i < numzones + 1; i++)
     {
         pop = zone_population(i, citylist);
@@ -990,15 +1013,19 @@ void prep_rnumgen(const int numzones, const int tpop, const vector<city> &cityli
 
 int main(int argc, char *argv[])
 {
+    // `flags` is an int array that specifies if a certain flag was provided.
     int flags[8];
+    // If there are no user-provided command line arguments, only flags[0] is set.
     if (argc == 1)
     {
         flags[0] = 1;
     }
     else
     {
+        /* This loop goes through the user-provided command line arguments and sets
+         * the corresponding elements of `flags`.
+         */
         string f;
-        string city1, city2;
         for (int i = 1; i < argc; i++)
         {
             f = argv[i];
@@ -1030,6 +1057,9 @@ int main(int argc, char *argv[])
             {
                 flags[7] = 1;
             }
+            /* If an invalid command line argument is provided, an error message is printed, and
+             * the program exits.
+             */
             else
             {
                 fprintf(stderr, "Usage: ./Citysim -write_info|write_dtable|write_graph|mode_bfs|mode_dijkstra\n");
@@ -1040,38 +1070,56 @@ int main(int argc, char *argv[])
     vector<city> citylist;
     map<string, int> name_dict;
     string readfile = "citylist.txt";
-
+    // The `read_cityinfo` function is called to read the data from "citylist.txt" into `citylist`.
     read_cityinfo(readfile, citylist, name_dict);
+    // If the "-write_info" flag is set, the `write_cityinfo` function is called. 
     if (flags[1] == 1)
     {
         write_cityinfo(citylist);
     }
+    // `dist` is a dtable object which stores the distances between every city in citylist.
     dtable dist(citylist);
+    // If the "-write_dtable" flag is set, the `write_citydtable` function is called.
     if (flags[2] == 1)
     {
         write_citydtable(citylist, dist);
     }
+    // A graph is created using `citylist` and `dist`. The adjacencies are stored in `graph`.
     edge graph((int)(citylist.size()));
     create_citygraph(citylist, dist, graph);
+    // If the "-write_graph" flag is set, the `write_citygraph` function is called.
     if (flags[3] == 1)
     {
         write_citygraph(citylist, dist, graph);
     }
+    /* `city1` and `city2` are strings that store the city names specified by the user.
+     * `source` and `sink` are the indicies corresponding to `city1` and `city2`.
+     * `vdist` and `vlink` are used to store the data describing the BFS or Dijkstra route.
+     */
     string city1, city2;
     int source, sink;
     vector<float> vdist;
     vector<int> vlink;
+    /* If the "-randomseed" flag is set, the seed for the random number generator is set to `time(NULL)`.
+     * Otherwise, the seed is set to 0. Then, the random number generator (`RNG`) is initialized.
+     */
     int seed = 0;
     if (flags[7] == 1)
     {
         seed = time(NULL);
     } 
     rnumgen RNG(seed);
+    // Preps the random number generator.
     int num_zones = nzones(citylist);
     int tpop = total_population(citylist);
     prep_rnumgen(num_zones, tpop, citylist, RNG);
+    // The remainder of the code only runs if the "-mode_bfs" or "-mode_dijkstra" flags are set.
     if (flags[4] == 1 || flags[5] == 1)
     {
+        /* While stdin is open, two strings will be read and stored in `city1` and `city2`. If either
+         * string is "*", the `source`/`sink` variable will be set using rnumgen::rand. Otherwise, the
+         * indicies are set with the `name_dict` map.
+         */ 
         printf("Enter> ");
         while (cin >> city1 >> city2)
         {
@@ -1105,6 +1153,10 @@ int main(int argc, char *argv[])
                     sink = name_dict.find(city2)->second;
                 }
             }
+            /* If the "-mode_dijkstra" flag is set, the `dijkstra_route` function is called.
+             * If the "-mode_bfs" flag is set, the `bfs_route` function is called.
+             * If both are set, `bfs_route` takes precedence.
+             */
             if (flags[5] == 1)
             {
                 dijkstra_route(source, sink, vdist, vlink, citylist, graph, dist);
@@ -1113,6 +1165,7 @@ int main(int argc, char *argv[])
             {
                 bfs_route(source, sink, vdist, vlink, citylist, dist, graph);
             }
+            // If the "-show" flag is set, the `show_route` function is called.
             if (flags[6] == 1)
             { 
                 show_route(source, sink, vdist, vlink, citylist, dist);
