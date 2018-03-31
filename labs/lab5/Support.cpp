@@ -22,19 +22,20 @@ void maze::create_maze(int nr, int nc)
     Nrows = nr;
     Ncols = nc;
     size = nr * nc;
-    grid = new bool[size][4];
+    grid = new bool*[size];
     for (int i = 0; i < size; i++)
     {
+        grid[i] = new bool[4];
         for (int j = 0; j < 4; j++)
         {
             grid[i][j] = true;
         }
     }
     vector< pair<int, int> > interior;
-    int ind, left, right, up, down;
+    int ind;
     for (int i = 0; i < Nrows; i++)
     {
-        for (int j = 0; i < Ncols; j++)
+        for (int j = 0; j < Ncols; j++)
         {
             ind = i*Ncols + j;
             if (i != 0)
@@ -62,16 +63,16 @@ void maze::create_maze(int nr, int nc)
     dset wallcontrol(size);
     vector< pair<int, int> >::iterator wall = interior.begin();
     int cell1, cell2, wallind1, wallind2;
-    while (wallcontrol.size() != 0)
+    while (wallcontrol.size() != 1)
     {
         cell1 = wall->first;
         wallind1 = wall->second;
         switch(wallind1)
         {
-            case 0: cell2 = cell1 - Ncols; wallind2 = 2;
-            case 1: cell2 = cell1 - 1; wallind2 = 3;
-            case 2: cell2 = cell1 + Ncols; wallind2 = 0;
-            case 3: cell2 = cell1 + 1; wallind2 = 1;
+            case 0: cell2 = cell1 - Ncols; wallind2 = 2; break;
+            case 1: cell2 = cell1 - 1; wallind2 = 3; break;
+            case 2: cell2 = cell1 + Ncols; wallind2 = 0; break;
+            case 3: cell2 = cell1 + 1; wallind2 = 1; break;
             default: fprintf(stderr, "An internal error occured:\nInvalid wall number.\n"); exit(-1);
         }
         int mergenum = wallcontrol.merge(cell1, cell2);
@@ -83,5 +84,20 @@ void maze::create_maze(int nr, int nc)
         grid[cell1][wallind1] = false;
         grid[cell2][wallind2] = false;
         ++wall;
+    }
+}
+
+void maze::write_maze()
+{
+    fprintf(stdout, "MAZE %i %i\n", Nrows, Ncols);
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            if (grid[i][j] == true)
+            {
+                fprintf(stdout, "%i %i\n", i, j);
+            }
+        }
     }
 }

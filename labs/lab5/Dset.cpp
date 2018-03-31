@@ -36,6 +36,7 @@ int dset::merge(int i, int j)
             Sj.parent = i;
             Si.rank += 1;
         }
+        Nsets -= 1;
     }
     else
     {
