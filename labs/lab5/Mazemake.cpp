@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 
     if (argc != 3) {
         cerr << "usage: " << argv[0]
-		     << " nrows ncols\n";
+             << " nrows ncols\n";
 	    return 0;
     }
 
