@@ -2,12 +2,6 @@
 
 class maze
 {
-    struct pathnode
-    {
-        pathnode() { mazeind = 0; parent = 0; }
-        pathnode(int i, int j) { mazeind = i; parent = j; }
-        int mazeind, parent;
-    };
     public:
         maze() { ; }
         ~maze();
@@ -19,7 +13,8 @@ class maze
         void write_path();
     private:
         bool **grid;
-        std::vector<pathnode> path;
+        std::vector<int> vlink;
         int Nrows, Ncols;
         int size;
+        int source, sink;
 };

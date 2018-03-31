@@ -1,6 +1,9 @@
 #include <algorithm>
+#include <climits>
 #include <cstdio>
 #include <cstdlib>
+#include <iostream>
+#include <stack>
 #include <utility>
 
 using namespace std;
@@ -99,5 +102,112 @@ void maze::write_maze()
                 fprintf(stdout, "%i %i\n", i, j);
             }
         }
+    }
+}
+
+void maze::read_maze()
+{
+    string label;
+    int nr, nc;
+    cin >> label >> nr >> nc;
+    Nrows = nr;
+    Ncols = nc;
+    size = nr * nc;
+    grid = new bool*[size];
+    for (int i = 0; i < size; i++)
+    {
+        grid[i] = new bool[4];
+        for (int j = 0; j < 4; j++)
+        {
+            grid[i][j] = false;
+        }
+    }
+    int cell, wall;
+    while (cin >> cell >> wall)
+    {
+        grid[cell][wall] = true;
+    }
+}
+
+bool maze::solve_maze()
+{
+    return solve_maze(0, size-1);
+}
+
+typedef enum { WHITE, BLACK } vcolor_t;
+
+bool maze::solve_maze(int start, int stop)
+{
+    source = start;
+    sink = stop;
+    vector<vcolor_t> vcolor;
+    vcolor.assign(size, WHITE);
+    vector<int> vdist;
+    vdist.assign(size, INT_MAX);
+    vdist[source] = 0;
+    vlink.assign(size, -1);
+    vlink[source] = source;
+    stack<int> S;
+    S.push(source);
+    int next;
+    while (!S.empty())
+    {
+        int i = S.top();
+        S.pop();
+        if (i == sink)
+        {
+            break;
+        }
+        if (vcolor[i] == BLACK)
+        {
+            continue;
+        }
+        vcolor[i] = BLACK;
+        for (int j = 0; j < 4; j++)
+        {
+            switch(j)
+            {
+                case 0: next = i - Ncols; break;
+                case 1: next = i - 1; break;
+                case 2: next = i + Ncols; break;
+                case 3: next = i + 1; break;
+                default: fprintf(stderr, "An internal error occured:\nInvalid wall number.\n"); exit(-2);
+            }
+            if (next < 0 || next >= size)
+            {
+                continue;
+            }
+            if (grid[i][j] == false && vdist[next] == INT_MAX)
+            {
+                vdist[next] = vdist[i] + 1;
+                vlink[next] = i;
+                S.push(next);
+            }
+        } 
+    }
+    while (!S.empty())
+    {
+        S.pop();
+    }
+    if (vdist[sink] == INT_MAX)
+    {
+        fprintf(stderr, "There is no path between source (%i) and sink (%i).\n", source, sink);
+        return false;
+    }
+    return true;
+}
+
+void maze::write_path()
+{
+    fprintf(stdout, "PATH %i %i\n", Nrows, Ncols);
+    vector<int> reverse;
+    for (int i = sink; i != source; i = vlink[i])
+    {
+        reverse.push_back(i);
+    }
+    reverse.push_back(source);
+    for (int j = (int)(reverse.size())-1; j >= 0; --j)
+    {
+        fprintf(stdout, "%i\n", reverse[j]);
     }
 }
