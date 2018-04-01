@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <iomanip>
@@ -63,13 +64,14 @@ void ppm::make_maze(string mazename)
     }
     int cell, wall;
     int row, col;
+    int rind, cind;
     while (fin >> cell >> wall)
     {
-        col = cell % nc;
-        row = (cell - col)/nc;
-        row *= width;
-        col *= width;
-        if (wall == 2 || wall == 3)
+        cind = cell % nc;
+        rind = (cell - cind)/nc;
+        row = rind * width;
+        col = cind * width;
+        if ((wall == 2 && rind != nr-1) || (wall == 3 && cind != nc-1))
         {
             continue;
         }
@@ -79,12 +81,35 @@ void ppm::make_maze(string mazename)
             {
                 img[row][col+i] = pixel(0x00);
             }
-            else
+            else if (wall == 1)
             {
                 img[row+i][col] = pixel(0x00);
             }
+            else if (wall == 2)
+            {
+                if (rind == nr-1)
+                {
+                    img[Nrows-1][col+i] = pixel(0x00);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            else
+            {
+                if (cind == nc-1)
+                {
+                    img[row+i][Ncols-1] = pixel(0x00);
+                }
+                else
+                {
+                    break;
+                }
+            }
         }
     }
+    fin.close();
 }
 
 void ppm::make_maze(string mazename, string pathname)
@@ -107,15 +132,15 @@ void ppm::make_maze(string mazename, string pathname)
     Nrows = nr;
     Ncols = nc;
     fstream fin2;
-    fin2.open(mazename.c_str(), ios::in);
+    fin2.open(pathname.c_str(), ios::in);
     if (!fin2.is_open())
     {
-        fprintf(stderr, "Could not open %s\n", mazename.c_str());
+        fprintf(stderr, "Could not open %s\n", pathname.c_str());
         exit(-3);
     }
     fin2 >> type >> nr >> nc;
     if (type != "PATH") {
-        fprintf(stderr, "%s is not the correct file type (incorrect header).\n", mazename.c_str());
+        fprintf(stderr, "%s is not the correct file type (incorrect header).\n", pathname.c_str());
         exit(-4);
     }
     if (nr != Nrows || nc != Ncols)
@@ -132,12 +157,13 @@ void ppm::make_maze(string mazename, string pathname)
     }
     int cellnum;
     int row, col;
+    int rind, cind;
     while(fin2 >> cellnum)
     {
-        col = cellnum % nc;
-        row = (cellnum - col)/nc;
-        row *= width;
-        col *= width;
+        cind = cellnum % nc;
+        rind = (cellnum - cind)/nc;
+        row = rind * width;
+        col = cind * width;
         for (int i = row; i < row+width; i++)
         {
             for (int j = col; j < col+width; j++)
@@ -147,14 +173,15 @@ void ppm::make_maze(string mazename, string pathname)
             }
         }
     }
+    fin2.close();
     int cell, wall;
     while (fin1 >> cell >> wall)
     {
-        col = cell % Ncols;
-        row = (cell - col)/Ncols;
-        row *= width;
-        col *= width;
-        if (wall == 2 || wall == 3)
+        cind = cell % nc;
+        rind = (cell - cind)/nc;
+        row = rind * width;
+        col = cind * width;
+        if ((wall == 2 && rind != nr-1) || (wall == 3 && cind != nc-1))
         {
             continue;
         }
@@ -164,16 +191,44 @@ void ppm::make_maze(string mazename, string pathname)
             {
                 img[row][col+i] = pixel(0x00);
             }
-            else
+            else if (wall == 1)
             {
                 img[row+i][col] = pixel(0x00);
             }
+            else if (wall == 2)
+            {
+                if (rind == nr-1)
+                {
+                    img[Nrows-1][col+i] = pixel(0x00);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            else
+            {
+                if (cind == nc-1)
+                {
+                    img[row+i][Ncols-1] = pixel(0x00);
+                }
+                else
+                {
+                    break;
+                }
+            }
         }
     }
+    fin1.close();
 }
 
 void ppm::print_maze()
 {
+    fstream *fout = new fstream();
+    fout->open("tmp.txt", ios::out | ios::binary);
+    streambuf *fout_buffer = fout->rdbuf();
+    streambuf *cout_buffer = cout.rdbuf();
+    fout->basic_ios<char>::rdbuf(cout_buffer);
     cout << "P6\n";
     cout << Ncols << " " << Nrows << "\n";
     cout << "255\n";
@@ -181,9 +236,16 @@ void ppm::print_maze()
     {
         for (int j = 0; j < Ncols; j++)
         {
-            cout << hex << img[i][j].R << " " << img[i][j].G << " " << img[i][j].B << " ";
+            *fout << img[i][j].R << img[i][j].G << img[i][j].B;
         }
     }
+    fout->basic_ios<char>::rdbuf(fout_buffer);
+    fout->close();
+    if (remove("tmp.txt") != 0)
+    {
+        fprintf(stderr, "Temporary file \"tmp.txt\" could not be deleted.\n");
+    }
+    delete fout;
 }
 
 int main(int argc, char** argv)
