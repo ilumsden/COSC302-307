@@ -56,3 +56,57 @@ The following files were provided before starting the lab:
 * Driver code files `Mazemake.cpp` and `Mazesolve.cpp`
 * A makefile
 * A shell script that automates the maze creation and solving process for the solution executables: `game.sh`
+
+## Example Output
+
+For example files, see the `example` directory.
+
+### Mazemake
+
+```
+unix> ./mazemake 23 41 > m1.txt
+unix> head m1.txt
+MAZE 23 41
+0 1
+0 2
+1 0
+1 2
+2 0
+2 2
+3 0
+4 0
+4 2
+```
+
+### Mazesolve
+
+```
+unix> ./mazesolve < m1.txt > p1.txt
+unix> head p1.txt
+PATH 23 41
+0
+1
+2
+3
+4
+5
+46
+47
+88
+```
+
+### Mazeshow
+
+```
+unix> ./mazeshow m1.txt > m1.ppm
+unix> display_program m1.ppm
+unix>
+unix> cat m1.ppm | convert - m1.png
+unix> display_program m1.png
+unix>
+unix> ./mazeshow m1.txt p1.txt > mp1.ppm
+unix> display_program mp1.ppm
+unix>
+unix> cat mp1.ppm | convert - mp1.png
+unix> display_program mp1.png
+``` 
