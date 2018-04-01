@@ -2,7 +2,7 @@
 
 ## Introduction
 
-See Wikipedia for a general description of how to generate and solve mazes: <http://en.wikipedia.org/wiki/Maze_generation_algorithm"> We will proceed with a simple version that generates mazes which have lots of the usual deadends. Perhaps somewhat unusual, they allow any cell to be reached from any other cell. This would easy to fix but besides the point of the exercise.
+See Wikipedia for a general description of how to generate and solve mazes: <http://en.wikipedia.org/wiki/Maze_generation_algorithm> We will proceed with a simple version that generates mazes which have lots of the usual deadends. Perhaps somewhat unusual, they allow any cell to be reached from any other cell. This would easy to fix but besides the point of the exercise.
 
 Your job is to write the support code needed to create your own Mazemake and Mazesolve executables which must behave as described next. Mazeshow is a standalone program that you write entirely on your own.
 
