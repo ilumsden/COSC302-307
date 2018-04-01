@@ -59,8 +59,6 @@ The following files were provided before starting the lab:
 
 ## Example Output
 
-For example files, see the `example` directory.
-
 ### Mazemake
 
 ```
