@@ -1,0 +1,336 @@
+
+<h1> CS302 -- Lab Assignment 5 (150+50 pts: Spring, 2018)</h1>
+
+<hr>
+<h3>Getting motivated</h3>
+You have worked hard all semester. Now it's time to play. In this lab
+you will write a program for generating a maze, another program for
+solving it, and an optional
+third program for displaying your maze and its solution.
+You will be using many of the C++/STL skills you have learned in 
+conjunction with data structures and algorithms such as
+disjoint-set and depth-first graph search.
+<p>
+
+<hr>
+<h3>Lab submission and due date</h3>
+Submit your work via Canvas no later than
+9:59am Monday April 2, 2018.
+You submit a tar file that contains missing Support.h 
+Support.cpp files which provide the functionality
+needed.
+CS307 students must also include a Mazeshow.cpp source code file
+for visualizing a maze and the path through it.
+CS302 students once again have the opportunity to earn extra credits
+by doing this part of the assignment.
+<p>
+
+<hr>
+<h3>Getting started and what you need to do</h3>
+
+See Wikipedia for a general description of how to 
+generate and solve mazes: 
+<a href="http://en.wikipedia.org/wiki/Maze_generation_algorithm"
+TARGET="_blank">http://en.wikipedia.org/wiki/Maze_generation_algorithm</a>
+We will proceed with a simple version that generates mazes which have lots
+of the usual deadends. Perhaps somewhat unusual, they allow any cell to 
+be reached from any other cell. This would easy to fix but besides the
+point of the exercise.
+<p>
+
+To help you get started, run the Hydra script
+/home/cs302/labs/lab5/copy to obtain the following files:
+game.sh (shell script for taking the fun out of generating and 
+solving mazes),
+mazemake, mazesolve and mazeshow (Hydra solution executables),
+Mazemake.cpp and Mazesolve.cpp (driver program source codes),
+and a makefile.
+Your job is to write the support code needed to create your own
+Mazemake and Mazesolve executables which must behave as described next.
+Mazeshow is a standalone program that you write entirely on your own.
+<p>
+
+<UL>
+
+<LI>
+<b>Mazemake (75 pts)</b><br>
+Mazemake generates a random maze. The program takes two 
+commandline arguments, namely,
+Nrows and Ncols. Your first job is to write the missing
+code for this program. Define a maze class and place it
+in a file called Support.h. Place member function
+implementations in a file called Support.cpp. See the
+provided Mazemake.cpp file for public members needed.
+Your code must be compatible with this main program
+which you must not change.
+<p>
+
+Conceptually, 
+imagine an Nrows x Ncols grid where the grid lines have been 
+colored in. Now randomly erase grid lines between neighboring 
+cells until paths exist that will allow you to walk from any cell 
+to any other cell. That's the maze you will make. You will 
+treat this maze grid as a graph.
+How you create the graph is up to you, but keep the following observations
+in mind. Cell (i,j) has four neithbors, namely, (i-1,j), (i,j-1), (i+1,j),
+and (i,j+1). The connectivity is bidirectional. That is, if (i-1,j; i,j) 
+represents a wall, then (i,j; i-1;j) represents the same wall viewed
+in the opposite direction. Same goes when no wall is present.
+Cells on the periphery do not have neighbors outside the grid. The
+easiest way to handle them is to never remove the outer walls thereby
+making it impossible to step off the grid.
+<p>
+
+Technically speaking, a graph consists of vertices and edges. 
+However, you don't need
+to store the maze graph vertices since they are merely
+(i,j) index pairs which you can traverse using nested loops.
+You also don't need to store the edges since they are
+given by the grid. What you do need to store are Boolean variables that 
+indicate whether a neighbor is walled off or not. To keep us all on the
+same page, let neighbor index 0 refer to cell (i-1,j), while neighbor
+indices 1, 2, and 3 refer to cells (i,j-1), (i+1,j), and (i,j+1),
+respectively. Let each of the corresponding four Booleans variables be
+true is there is a wall between (i,j) and the cell in question, 
+and false is there isn't a wall.
+This means you can represent the graph as a 2D array which has
+Nrows x Ncols rows and four columns. You look up cell (i,j)
+using index i*Ncols+j. This is no different from the matrix class
+where we stored the data in a 1D buffer and allowed 2D lookup. 
+<p>
+
+Initially, set all cells to be completely walled in (all four 
+Boolean variable are true). In order to efficiently select which
+walls to remove (which Booleans variables to set false), generate
+a list of all <i>interior neighbor cell pairs</i>
+which you then subject to random perturbation (see
+similarly named code handout from Feb 10, 2018). Having done
+that, you merely have to iterate thru this list while using a 
+disjoint-set (see similarly named code handout from Mar 11, 2018) 
+to see if a wall should be removed. How so?
+First, place each cell in its own set. When given a neighbor
+cell pair, remove the wall between them if the two cells belong to
+different sets and merge the cells into the same set. When
+all cells end up belonging to the same set, stop the process
+since all cells are now connected to each other. 
+<p>
+
+The last step is to output the maze to stdout for redirection into 
+a file. The output format should be as indicated below. 
+Basically, you state where to put a wall by providing integers
+that refer to a cell and a wall. 
+Once again, the cell at grid position (i,j) is represented by
+the integer i*Ncols+j and the four neighbors 
+(i-1,j), (i,j-1), (i+1,j), and (i,j+1) are indicated by
+0, 1, 2, and 3. 
+<p>
+
+Hint: Keep in mind that if you break down the wall between 
+cell i and cell j and indicate this in cell i's wall list, 
+you must also update cell j's wall list to indicate the 
+lack of a wall between it and cell i. If you forget to
+this, then you end up with one-way walls which make no
+sense.
+<p>
+
+<LI> 
+<b>Mazesolve (75 pts)</b><br>
+Mazesolve finds a path thru the maze. 
+The program reads a maze file from stdin and outputs the
+path to stdout.
+Your job is to add functionality to the maze class.
+Update the maze class in Support.h. Add new member function
+implementations in Support.cpp. See the
+provided Mazemake.cpp file for public members needed.
+Your code must be compatible with this main program
+which you must not change.
+<p>
+
+Read the maze file and re-create the graph that represents it
+by doing the opposite of what you did in the mazemake program. 
+Hint: Mazemake initialized the maze to have walls between every 
+cell and then proceeded to knock them down. Mazesolve should
+initialize the maze to not have no walls and use the maze file 
+to add them. 
+<p>
+
+Once the graph is in place, apply depth-first search to find 
+a path thru the maze (stack based backtracking). Assume
+the source is index 0 and the sink is index Nrows x Ncols - 1.
+Keep in mind that you don't want to enter into cycles. That is,
+you don't want to revisit cells already visited. Use vertex 
+coloring for this purpose. Also, you can't walk thru walls.
+Finally, you need to leave a ``breadcrumb trail'' as you go 
+along, so you can find your way back. That is, make a note of 
+who the predecessor is when you move from one cell to the next.
+<p>
+
+The last step is to output the path to stdout for redirection into 
+a file.  The output format should be as indicated below. This time,
+you output the sequence of cells on the path. 
+<p>
+
+<LI>
+<b>Mazeshow (50 pts): Required for CS307, optional for CS302</b>
+<br>
+Mazeshow creates either a ppm image of the maze or
+a ppm image of the maze or with the solution overlaid in yellow
+(think "Wizard of Oz").
+The program takes commandline arguments arguments accordingly:
+a maze file for the former version and
+a maze file and a path for the latter version.
+Make this a standalone program that doesn't depend on the
+Support.h and Support.cpp files. See inspiration from
+code handouts and previous labs wrt ppm file manipulation.
+<p>
+
+There is not much to say about this program. Create an
+(Nrows x width + 1) x (Ncols x width + 1) sized ppm image
+where width is the number of pixels assigned to a cell.
+Make width a variable but set it to 11 for the code you
+submit.
+Walls should be drawn in the top row or left column of a cell.
+Since
+wall index 0 for (i,j) is wall index 2 for (i-1,j) you really
+only need to color the former, but there is nothing
+wrong in coloring both walls and doing that makes for less
+checking.
+Likewise,
+wall index 1 for (i,j) is wall index 3 for (i,j-1) you really
+only need to color the former, there is nothing
+wrong in coloring both walls and doing that makes for less
+checking. Same problem and solution, same wording.
+<p>
+
+This probably sounds confusing, but it's actually pretty
+straightforward.
+At first, make the ppm image white (255,255,255). 
+Then add the walls which you color black (0,0,0). 
+The only tricky bit is stepping
+thru the width x width blocks for each maze grid cell.
+The bottom and right hand side walls are the single
+pixel add-ons indicated by the image size 
+(* + 1) x (* + 1) above.
+When a path file is also given, first color the maze grid
+cells yellow (240,240,100). 
+The add the black maze grid. The reason
+for doing the path first is that it's easier to color the
+entire cell than to work out which pixels are walls.
+<p>
+
+When done, write the resulting ppm to stdout and redirect
+it into a file. Then take a look!
+Word of warning: A 100 x 100 maze contains 10,000 cells. 
+Using 11 x 11 pixels to represent each cell, the
+size of the ppm image is 3 x 10,000 x 121 = 3.5 Mbytes. 
+Consider piping the output from mazeshow to 
+"convert - filename.png"
+to get a smaller file which is faster to download via
+a wireless network. See the game.sh shell script.
+
+</UL>
+
+<hr>
+<h3>Example output</h3>
+
+Click on links for full views of files:
+
+<br>
+Example 23x41 maze:
+<a href="http://web.eecs.utk.edu/~jgregor/cs302/m1.txt">m1.txt</a>
+
+<br>
+Corresponding solution:
+<a href="http://web.eecs.utk.edu/~jgregor/cs302/p1.txt">p1.txt</a>
+
+<br>
+PNG image of the two:
+<a href="http://web.eecs.utk.edu/~jgregor/cs302/mp1.png">mp1.png</a>
+
+<p class="page"></p>
+
+<h4>mazemake
+</h4>
+<pre>
+unix> mazemake 23 41 > m1.txt
+unix> head m1.txt
+MAZE 23 41
+0 1
+0 2
+1 0
+1 2
+2 0
+2 2
+3 0
+4 0
+4 2
+</pre>
+
+<hr>
+<h4>mazesolve</h4>
+<pre>
+unix> mazesolve < m1.txt > p1.txt
+unix> head p1.txt
+PATH 23 41
+0
+1
+2
+3
+4
+5
+46
+47
+88
+</pre>
+<hr>
+
+<h4>mazeshow</h4>
+<pre>
+unix> mazeshow m1.txt > m1.ppm
+unix> display_program m1.ppm
+unix>
+unix> cat m1.ppm | convert - m1.png
+unix> display_program m1.png
+unix>
+unix> mazeshow m1.txt p1.txt > mp1.ppm
+unix> display_program mp1.ppm
+unix>
+unix> cat mp1.ppm | convert - mp1.png
+unix> display_program mp1.png
+</pre>
+<hr>
+<h3>Grading rubric</h3>
+
+<b>Your code most compile and run free of segmentation faults
+on a Hydra machine in order to be fully graded.</b>
+
+<pre>
+
+MAZEMAKE 75
+15: Proper definition of maze class.
+50: Implementation of maze::create_maze(). Create
+    initial maze with walled in cells. Use randomly perturbed
+	list of interior neighbor cell pairs combined with a
+	disjoint-set for wall removal.
+10: Implemenation of maze::write_maze(): Print maze to output 
+    file in proper format. Code must be compatible with the 
+	solution code (not producing the same sequence of random 
+	numbers and thus a different maze is OK).
+
+MAZESOLVE
+ 5: Update of maze class to support new functionality.
+10: Implementation of maze::read_maze(). Read maze file and
+    re-establish internal representation.
+40: Implementation of maze::solve_maze(). Find a path from 
+    entry cell to exit cell using depth-first search.
+20: Implementation of maze::write_path(). Print solution path 
+    to output file.
+
+MAZESHOW Required for CS307 -- Extra credit for CS302
+25: Create PPM image of maze with walls in place.
+25: Add solution path to PPM image.
+</pre>
+<br>
+
+</hr>
+Tue Mar 13 15:10:20 EDT 2018
