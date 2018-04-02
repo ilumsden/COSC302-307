@@ -6,6 +6,13 @@ using namespace std;
 
 #include "Support.h"
 
+/* Mazemake.cpp
+ *
+ * This file is the driver for making a random maze given the
+ * number of rows and columns. It was provided, and no meaningful
+ * changes were made to it.
+ */
+
 int main(int argc, char *argv[]) 
 {
     srand(time(NULL));
