@@ -188,21 +188,29 @@ bool maze::solve_maze(int start, int stop)
     S.push(source);
     // `next` stores the index of the candidate for the next cell in the path.
     int next;
+    // This loop generates the shortest path from source to sink
     while (!S.empty())
     {
+        // `i` is the index of the last element currently in the path.
         int i = S.top();
         S.pop();
+        // If `i` is the sink, the path has been found, and the loop is broken.
         if (i == sink)
         {
             break;
         }
+        /* If the color of `i` is BLACK, the node has already been visited
+         * and thus shouldn't be visited again.
+         */ 
         if (vcolor[i] == BLACK)
         {
             continue;
         }
+        // Sets the color of `i` to BLACK to note that it has been visited.
         vcolor[i] = BLACK;
         for (int j = 0; j < 4; j++)
         {
+            // Generates the value of `next` based on the wall number (`j`).
             switch(j)
             {
                 case 0: next = i - Ncols; break;
@@ -211,10 +219,16 @@ bool maze::solve_maze(int start, int stop)
                 case 3: next = i + 1; break;
                 default: fprintf(stderr, "An internal error occured:\nInvalid wall number.\n"); exit(-2);
             }
+            // Prevents `next` from being an out-of-bounds index value.
             if (next < 0 || next >= size)
             {
                 continue;
             }
+            /* If there is no wall between `i` and `next` and the distance from source
+             * to `next` is undefined (aka the default), set the distance of `next` to
+             * be the distance of `i` plus i. Then, the parent of `next` (as specified by
+             * `vlink`) along the path is set to `i`. Finally, `next` is pushed onto the stack.
+             */
             if (grid[i][j] == false && vdist[next] == INT_MAX)
             {
                 vdist[next] = vdist[i] + 1;
@@ -223,27 +237,38 @@ bool maze::solve_maze(int start, int stop)
             }
         } 
     }
+    // Clears the stack if the above loop exitted before the stack was empty.
     while (!S.empty())
     {
         S.pop();
     }
+    /* If the distance from source to sink is the default, no path
+     * could be found, and an error message is printed. False is also returned.
+     */
     if (vdist[sink] == INT_MAX)
     {
         fprintf(stderr, "There is no path between source (%i) and sink (%i).\n", source, sink);
         return false;
     }
+    // If a path was found, it is stored in `vlink`, and this function returns true.
     return true;
 }
 
+// This function writes the path from source to sink to stdout.
 void maze::write_path()
 {
+    // Writes header
     fprintf(stdout, "PATH %i %i\n", Nrows, Ncols);
+    /* Reverses the path data obtained from `vlink` to allow it
+     * to be printed in order from source to sink.
+     */
     vector<int> reverse;
     for (int i = sink; i != source; i = vlink[i])
     {
         reverse.push_back(i);
     }
     reverse.push_back(source);
+    // Prints the path.
     for (int j = (int)(reverse.size())-1; j >= 0; --j)
     {
         fprintf(stdout, "%i\n", reverse[j]);
