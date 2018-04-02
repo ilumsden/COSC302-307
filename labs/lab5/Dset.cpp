@@ -8,13 +8,6 @@ dset::dset(int num_sets)
     Nsets = num_sets;
 }
 
-int dset::add_set()
-{
-    S.insert(S.end(), 1, node());
-    Nsets += 1;
-    return S.size() - 1;
-}
-
 int dset::merge(int i, int j)
 {
     i = this->find(i);
