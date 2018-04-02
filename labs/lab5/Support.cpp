@@ -19,7 +19,7 @@ using namespace std;
  * functions as listed in Support.h. This file is also where Dset is used.
  */
 
-// A deconstructor for maze to prevent data corruption and seg faults.
+// A destructor for maze to prevent data corruption and seg faults.
 maze::~maze()
 {
     for (int i = 0; i < size; i++)

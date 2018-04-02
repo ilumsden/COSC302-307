@@ -5,6 +5,12 @@ using namespace std;
 
 #include "Support.h"
 
+/* Mazesolve.cpp
+ *
+ * This file is the driver for solving a maze provided through
+ * stdin. It was provided, and no meaningful changes were made to it.
+ */
+
 int main(int argc, char *argv[]) {
   if (argc != 1 && argc != 3) {
     cerr << "usage: " << argv[0]
