@@ -29,3 +29,9 @@ Round the distances to the closest 5.0 mile distance. This will make it easier t
 Next, implement function `write_citydtable()` which writes the contents of the distance table to a file called "citydtable.txt" in the current directory if the program is given a `-write_dtable` option on the commandline. See below for example output. Your output must match the layout. __Hint:__ The width of the text string is `2*w+4` where w is the length of the longest city name. Use `setfill()` to create the ellipses.
 
 ## Citysim3
+
+__Citysim3__ should implement function `create_citygraph()` which determines which cities are adjacent to one another (connected) thereby implicitly creating a graph. The rules for adjacency are as follows.
+* A REGIONAL city is adjacent to all other REGIONAL cities in the same zone. A REGIONAL city is also adjacent to the closest GATEWAY city in the same zone.
+* A GATEWAY city is adjacent to all other GATEWAY cities in the same zone. A GATEWAY city is also adjacent to the closest GATEWAY in each of the other zones if the distance is 6,000 miles or less.
+
+__Hint:__ First extract an index list for each type of city. Then iterate through these lists following the above rules. Use the indices to look up the pertinent information in `the vector<city>` array discussed above. In fact, think of these indices as pointers.
