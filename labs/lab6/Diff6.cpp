@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -34,19 +35,18 @@ class LCS
         void text1_push_back(string fname);
         void text2_push_back(string fname);
         void compute_alignment();
-	    //void report_difference();
+	//void report_difference();
     private:
-	    // support functions
+	// support functions
         int op_cost(int, int);
         vector<string> text1;
         vector<string> text2;
         matrix<int> costs;
-        /* 0 -> Initial value (0, 0)
-         * 1 -> Deletion
-         * 2 -> Insertion
-         * 4 -> No op
+        /* link[i][j][0] -> Diagonal Link (Eq)
+         * link[i][j][1] -> Horizontal Link (Insert)
+         * link[i][j][2] -> Vertical Link (Deletion)
          */
-        matrix<int> link;
+        matrix<bool[3]> link;
 };
 
 /*LCS::~LCS()
@@ -97,7 +97,6 @@ void LCS::compute_alignment()
     costs = matrix(text1.size() + 1, text2.size() + 1);
     link = matrix(text1.size() + 1, text2.size() + 1);
     costs[0][0] = 0;
-    link[0][0] = 0;
     int addcost;
     for (int i = 0; i < (int)(text1.size()) + 1; i++)
     {
@@ -105,20 +104,44 @@ void LCS::compute_alignment()
         {
             if (i == 0 && j == 0)
             {
-                continue;
+                link[0][0][0] = false;
+                link[0][0][1] = false;
+                link[0][0][2] = false;
             }
             else if (i != 0 && j == 0)
             {
                 costs[i][0] = costs[i-1][0] + 1;
-                link[i][0] = 1;
+                link[i][0][0] = false;
+                link[i][0][1] = false;
+                link[i][0][2] = true;
             }
             else if (i == 0 && j != 0)
             {
                 costs[0][j] = costs[0][j-1] + 1;
-                link[0][j] = 2;
+                link[0][j][0] = false;
+                link[0][j][1] = true;
+                link[0][j][2] = false;
             }
             else
             {
+                int to_sort[3];
+                int pre_sort[3];
+                pre_sort[0] = INT_MAX;
+                int init_cost = op_cost(i, j);
+                if (init_cost == 0)
+                {
+                    pre_sort[0] = costs[i-1][j-1];
+                }
+                pre_sort[1] = costs[i][j-1] + init_cost;
+                pre_sort[2] = costs[i-1][j] + init_cost;
+                for (int i = 0; i < 3; i++)
+                {
+                    to_sort[i] = pre_sort[i];
+                }
+                if (to_sort[1] < to_sort[0]) { swap(to_sort[0], to_sort[1]); }
+                if (to_sort[2] < to_sort[0]) { swap(to_sort[0], to_sort[2]); }
+                if (to_sort[2] < to_sort[1]) { swap(to_sort[1], to_sort[2]); }
+                costs[i][j] = to_sort[0];
                 
             }
         }
