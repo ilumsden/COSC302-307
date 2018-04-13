@@ -46,7 +46,14 @@ class LCS
 	void report_difference();
     private:
 	// support functions
-        void report_difference(int i, int j);
+        enum edit_t
+        {
+            Delete,
+            Insert,
+            Match
+        }
+        void report_difference(stack<edit_t>&, int i, int j);
+        void print_difference(stack<edit_t>&);
         int op_cost(int, int);
         vector<string> text1;
         vector<string> text2;
@@ -96,7 +103,7 @@ void LCS::text2_push_back(string fname)
     if (!fin.is_open())
     {
         fprintf(stdout, "%s could not be opened.\n", fname.c_str());
-        exit(-1);
+        exit(-2);
     }
     string line;
     while (getline(fin, line))
@@ -162,15 +169,34 @@ void LCS::compute_alignment()
 
 void LCS::report_difference()
 {
-    stack<string> allign1, allign2;
+    stack<edit_t> moves;
     int start1 = text1.size();
     int start2 = text2.size();
-    report_difference(allign1, allign2, start1, start2);
+    report_difference(moves, start1, start2);
 }
 
-void LCS::report_difference(stack<string>$ allign1, stack<string>& allign2, int i, int j)
+void LCS::report_difference(stack<edit_t>& moves, int i, int j)
 {
+    switch (link[i][j])
+    {
+        case DEL: moves.push(Delete); report_difference(moves, i-1, j); break;
+        case INS: moves.push(Insert); report_difference(moves, i, j-1); break;
+        case MATCH: moves.push(Match); report_difference(moves, i-1, j-1); break;
+        case DEF: return;
+        default: fprintf(stderr, "Internal Error: the link matrix contains an unknown value.\n"); exit(-3); 
+    }
+    return;
+}
 
+void LCS::print_difference(const stack<edit_t>& moves)
+{
+    vector< vector<edit_t> > groups;
+    edit_t sing_move;
+    for (int i = 0; i < (int)(moves.size()); i++)
+    {
+        sing_move = moves.top();
+        moves.pop();
+    }
 }
 
 int main(int argc, char **argv)
