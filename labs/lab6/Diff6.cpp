@@ -51,7 +51,10 @@ matrix<T>::matrix(int nr, int nc)
 template <typename T>
 void matrix<T>::assign(int nr, int nc)
 {
-    matrix(nr, nc);
+    Nrows = nr;
+    Ncols = nc;
+    delete [] data;
+    data = new T[Nrows*Ncols];
 }
 
 class LCS 
@@ -127,7 +130,7 @@ void LCS::text2_push_back(string fname)
 
 int LCS::op_cost(int ind1, int ind2)
 {
-    return text1[ind1] == text2[ind2] ? 0 : 1;
+    return text1[ind1-1] == text2[ind2-1] ? 0 : 1;
 }
 
 void LCS::compute_alignment()
@@ -135,9 +138,9 @@ void LCS::compute_alignment()
     costs.assign(text1.size() + 1, text2.size() + 1);
     link.assign(text1.size() + 1, text2.size() + 1);
     costs[0][0] = 0;
-    for (int i = 0; i < (int)(text1.size()) + 1; i++)
+    for (int i = 0; i < costs.get_Nrows(); i++)
     {
-        for (int j = 0; j < (int)(text2.size()) + 1; j++)
+        for (int j = 0; j < costs.get_Ncols(); j++)
         {
             if (i == 0 && j == 0)
             {
@@ -190,13 +193,12 @@ void LCS::report_difference()
 
 void LCS::report_difference(stack<edit_t>& moves, int i, int j)
 {
-    printf("%i %i\n", i, j);
     switch (link[i][j])
     {
-        case DEL: printf("Add D\n"); moves.push(Delete); report_difference(moves, i-1, j); break;
-        case INS: printf("Add I\n"); moves.push(Insert); report_difference(moves, i, j-1); break;
-        case MATCH: printf("Add M\n"); moves.push(Match); report_difference(moves, i-1, j-1); break;
-        case DEF: printf("Add Def\n"); return;
+        case DEL: moves.push(Delete); report_difference(moves, i-1, j); break;
+        case INS: moves.push(Insert); report_difference(moves, i, j-1); break;
+        case MATCH: moves.push(Match); report_difference(moves, i-1, j-1); break;
+        case DEF: return;
         default: fprintf(stderr, "Internal Error: the link matrix contains an unknown value.\n"); exit(-3); 
     }
     return;
