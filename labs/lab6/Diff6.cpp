@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -7,6 +8,22 @@
 #include <vector>
 
 using namespace std;
+
+enum edit_t
+{
+    Delete,
+    Insert,
+    Match,
+    Sub
+};
+
+enum
+{
+    DEF = 0,
+    INS = 1,
+    DEL = 2,
+    MATCH = 3
+};
 
 template <typename T>
 class matrix 
@@ -23,14 +40,16 @@ class matrix
         T* data;
 };
 
-matrix::matrix(int nr, int nc)
+template <typename T>
+matrix<T>::matrix(int nr, int nc)
 {
     Nrows = nr;
     Ncols = nc;
     data = new T[Nrows*Ncols];
 }
 
-void matrix::assign(int nr, int nc)
+template <typename T>
+void matrix<T>::assign(int nr, int nc)
 {
     matrix(nr, nc);
 }
@@ -38,7 +57,7 @@ void matrix::assign(int nr, int nc)
 class LCS 
 {
     public:
-        LCS();
+        //LCS();
         //~LCS();
         void text1_push_back(string fname);
         void text2_push_back(string fname);
@@ -46,12 +65,6 @@ class LCS
 	void report_difference();
     private:
 	// support functions
-        enum edit_t
-        {
-            Delete,
-            Insert,
-            Match
-        }
         void report_difference(stack<edit_t>&, int i, int j);
         void print_difference(stack<edit_t>&);
         int op_cost(int, int);
@@ -64,15 +77,15 @@ class LCS
          * 4 -> Match
          */
         matrix<int> link;
-        const int DEF, INS, DEL, MATCH;
+        //const int DEF, INS, DEL, MATCH;
 };
 
-LCS::LCS()
+/*LCS::LCS()
     : DEF(0)
     , INS(1)
     , DEL(2)
     , MATCH(4)
-{}
+{}*/
 
 /*LCS::~LCS()
 {
@@ -119,10 +132,9 @@ int LCS::op_cost(int ind1, int ind2)
 
 void LCS::compute_alignment()
 {
-    costs.(text1.size() + 1, text2.size() + 1);
-    link.(text1.size() + 1, text2.size() + 1);
+    costs.assign(text1.size() + 1, text2.size() + 1);
+    link.assign(text1.size() + 1, text2.size() + 1);
     costs[0][0] = 0;
-    int addcost;
     for (int i = 0; i < (int)(text1.size()) + 1; i++)
     {
         for (int j = 0; j < (int)(text2.size()) + 1; j++)
@@ -146,20 +158,20 @@ void LCS::compute_alignment()
                 int add_cost = op_cost(i, j);
                 if (add_cost == 0)
                 {
-                    cost[i][j] = cost[i-1][j-1];
+                    costs[i][j] = costs[i-1][j-1];
                     link[i][j] = MATCH;
                     continue;
                 }
-                int delcost = cost[i-1][j] + add_cost;
-                int inscost = cost[i][j-1] + add_cost;
+                int delcost = costs[i-1][j] + add_cost;
+                int inscost = costs[i][j-1] + add_cost;
                 if (delcost <= inscost)
                 {
-                    cost[i][j] = delcost;
+                    costs[i][j] = delcost;
                     link[i][j] = DEL;
                 }
                 else
                 {
-                    cost[i][j] = inscost;
+                    costs[i][j] = inscost;
                     link[i][j] = INS; 
                 }
             }
@@ -173,29 +185,108 @@ void LCS::report_difference()
     int start1 = text1.size();
     int start2 = text2.size();
     report_difference(moves, start1, start2);
+    print_difference(moves);
 }
 
 void LCS::report_difference(stack<edit_t>& moves, int i, int j)
 {
+    printf("%i %i\n", i, j);
     switch (link[i][j])
     {
-        case DEL: moves.push(Delete); report_difference(moves, i-1, j); break;
-        case INS: moves.push(Insert); report_difference(moves, i, j-1); break;
-        case MATCH: moves.push(Match); report_difference(moves, i-1, j-1); break;
-        case DEF: return;
+        case DEL: printf("Add D\n"); moves.push(Delete); report_difference(moves, i-1, j); break;
+        case INS: printf("Add I\n"); moves.push(Insert); report_difference(moves, i, j-1); break;
+        case MATCH: printf("Add M\n"); moves.push(Match); report_difference(moves, i-1, j-1); break;
+        case DEF: printf("Add Def\n"); return;
         default: fprintf(stderr, "Internal Error: the link matrix contains an unknown value.\n"); exit(-3); 
     }
     return;
 }
 
-void LCS::print_difference(const stack<edit_t>& moves)
+void LCS::print_difference(stack<edit_t>& moves)
 {
-    vector< vector<edit_t> > groups;
+    vector< pair<edit_t, int> > groups;
     edit_t sing_move;
-    for (int i = 0; i < (int)(moves.size()); i++)
+    int num_ins = 0;
+    int num_del = 0;
+    int num_match = 0;
+    int num_sub;
+    sing_move = moves.top();
+    moves.pop();
+    while (!moves.empty())
     {
-        sing_move = moves.top();
-        moves.pop();
+        while (sing_move != Match)
+        {
+            if (sing_move == Insert)
+            {
+                num_ins++;
+            }
+            else
+            {
+                num_del++;
+            }
+            if (moves.empty())
+            {
+                break;
+            }
+            sing_move = moves.top();
+            moves.pop();
+        }
+        while (sing_move == Match)
+        {
+            num_match++;
+            if (moves.empty())
+            {
+                break;
+            }
+            sing_move = moves.top();
+            moves.pop();
+        }
+        num_sub = num_ins - num_del;
+        if (num_sub < 0)
+        {
+            num_del = abs(num_sub);
+            num_sub = num_ins;
+            if (num_sub != 0)
+            {
+                groups.push_back(make_pair(Sub, num_sub));
+            }
+            groups.push_back(make_pair(Delete, num_del));
+            groups.push_back(make_pair(Match, num_match));
+        }
+        else if (num_sub > 0)
+        {
+            num_ins = abs(num_sub);
+            num_sub = num_del;
+            if (num_sub != 0)
+            {
+                groups.push_back(make_pair(Sub, num_sub));
+            }
+            groups.push_back(make_pair(Insert, num_del));
+            groups.push_back(make_pair(Match, num_match));
+        }
+        else
+        {
+            num_sub = num_ins;
+            if (num_sub != 0)
+            {
+                groups.push_back(make_pair(Sub, num_sub));
+            }
+            groups.push_back(make_pair(Match, num_match));
+        }
+    }
+    for (int i = 0; i < (int)(groups.size()); i++)
+    {
+        for (int j = 0; j < groups[i].second; j++)
+        {
+            switch (groups[i].first)
+            {
+                case Insert: printf("Insert\n"); break;
+                case Delete: printf("Delete\n"); break;
+                case Sub: printf("Sub\n"); break;
+                case Match: printf("Match\n"); break;
+                default: printf("ERROR\n");
+            }
+        }
     }
 }
 
@@ -205,8 +296,8 @@ int main(int argc, char **argv)
 
     LCS lcs;  // instantiate your "lcs based diff" object
 
-    // read the text from file1 into the lcs.text1 buffer
-    // read the text from file2 into the lcs.text2 buffer
+    lcs.text1_push_back(argv[1]);
+    lcs.text2_push_back(argv[2]);
 
     lcs.compute_alignment();
     lcs.report_difference();
