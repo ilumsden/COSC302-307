@@ -9,6 +9,9 @@
 #include <utility>
 #include <vector>
 
+#include <iostream>
+#include <iomanip>
+
 using namespace std;
 
 enum edit_t
@@ -252,6 +255,16 @@ void LCS::print_difference(stack<edit_t>& moves)
             str2.push_back('M');
         }
     }
+    for (int i = 0; i < (int)(str1.size()); i++)
+    {
+        printf("%c ", str1[i]);
+    }
+    printf("\n");
+    for (int i = 0; i < (int)(str2.size()); i++)
+    {
+        printf("%c ", str2[i]);
+    }
+    printf("\n");
     pair<int, int> range1, range2;
     int ind1 = 0;
     int ind2 = 0;
@@ -259,37 +272,34 @@ void LCS::print_difference(stack<edit_t>& moves)
     int start2 = -1;
     int end1 = -1;
     int end2 = -1;
+    int tmp1, tmp2;
     char type;
-    //tuple<char, pair<int, int>, pair<int, int> > header = make_tuple('Z', make_pair(-1, -1), make_pair(-1, -1));
     vector< tuple<char, pair<int, int>, pair<int, int> > > headlist;
     for (int i = 0; i < (int)(str1.size()); i++)
     {
         if (str1[i] == '-' && str2[i] == 'I')
         {
             ++ind2;
-            if (start1 == -1 && start2 == -1)
+            if (start2 == -1)
             {
-                start1 = ind1;
                 start2 = ind2;
             }
             else
             {
-                end1 = ind1;
                 end2 = ind2;
             }
         }
         else if (str1[i] == 'D' && str2[i] == '-')
         {
             ++ind1;
-            if (start1 == -1 && start2 == -1)
+            printf("ind1 = %i ind2 = %i\n", ind1, ind2);
+            if (start1 == -1)
             {
                 start1 = ind1;
-                start2 = ind2;
             }
             else
             {
                 end1 = ind1;
-                end2 = ind2;
             }
         }
         else
@@ -302,32 +312,62 @@ void LCS::print_difference(stack<edit_t>& moves)
             {
                 switch (str1[i-1])
                 {
-                    case '-': type = 'I'; break;
-                    case 'D': type = 'D'; break;
+                    case '-': type = 'a'; break;
+                    case 'D': type = 'd'; break;
                     case 'M': break;
                     default: fprintf(stderr, "Internal Error: Invalid allignment type.\n"); exit(-4);
+                }
+                if (start1 == -1)
+                {
+                    start1 = ind1;
+                }
+                if (start2 == -1)
+                {
+                    start2 = ind2;
                 }
                 headlist.push_back(make_tuple(type, make_pair(start1, -1), make_pair(start2, -1)));
             }
             else
             {
-                int diff1 = abs(end1 - start1);
-                int diff2 = abs(end2 - start2);
-                if (diff1 == diff2)
+                int diff1, diff2;
+                if (start1 != -1 && start2 != -1) 
                 {
-                    headlist.push_back(make_tuple('C', make_pair(start1, end1), make_pair(start2, end2)));
+                    diff1 = abs(end1 - start1);
+                    diff2 = abs(end2 - start2);
                 }
-                else if (diff1 < diff2)
+                else if (start1 == -1 && start2 != -1)
                 {
-                    headlist.push_back(make_tuple('C', make_pair(start1, end1), make_pair(start2, start2+diff1)));
-                    headlist.push_back(make_tuple('I', make_pair(end1, -1), make_pair(start2+diff1+1, end2)));
+                    diff1 = 0;
+                    diff2 = abs(end2 - start2);
                 }
                 else
                 {
-                    headlist.push_back(make_tuple('C', make_pair(start1, start1+diff2), make_pair(start2, end2)));
-                    headlist.push_back(make_tuple('D', make_pair(start1+diff1+1, end1), make_pair(end2, -1)));
+                    diff1 = abs(end1 - start1);
+                    diff2 = 0;
+                }
+                if (diff1 == diff2)
+                {
+                    headlist.push_back(make_tuple('c', make_pair(start1, end1), make_pair(start2, end2)));
+                }
+                else if (diff1 < diff2)
+                {
+                    if (diff1 != 0)
+                    {
+                        headlist.push_back(make_tuple('c', make_pair(start1, end1), make_pair(start2, start2+diff1)));
+                    }
+                    headlist.push_back(make_tuple('a', make_pair(end1, -1), make_pair(start2+diff1+1, end2)));
+                }
+                else
+                {
+                    if (diff2 != 0)
+                    {
+                        headlist.push_back(make_tuple('c', make_pair(start1, start1+diff2), make_pair(start2, end2)));
+                    }
+                    headlist.push_back(make_tuple('d', make_pair(start1+diff1+1, end1), make_pair(end2, -1)));
                 }
             }
+            tmp1 = end1;
+            tmp2 = end2;
             start1 = -1;
             end1 = -1;
             start2 = -1;
@@ -335,6 +375,78 @@ void LCS::print_difference(stack<edit_t>& moves)
             ++ind1;
             ++ind2;
         }
+    }
+    printf("ind1 = %i ind2 = %i\n", ind1, ind2);
+    if (start1 == -1 && start2 == -1)
+    {
+        ;
+    }
+    else if (end1 == -1 && end2 == -1)
+    {
+        switch (str1[str1.size()-1])
+        {
+            case '-': type = 'a'; break;
+            case 'D': type = 'd'; break;
+            case 'M': break;
+            default: fprintf(stderr, "Internal Error: Invalid allignment type.\n"); exit(-4);
+        }
+        if (start1 == -1)
+        {
+            start1 = ind1;
+        }
+        if (start2 == -1)
+        {
+            start2 = ind2;
+        }
+        headlist.push_back(make_tuple(type, make_pair(start1, -1), make_pair(start2, -1)));
+    }
+    else
+    {
+        int diff1, diff2;
+        if (start1 != -1 && start2 != -1) 
+        {
+            diff1 = abs(end1 - start1);
+            diff2 = abs(end2 - start2);
+        }
+        else if (start1 == -1 && start2 != -1)
+        {
+            diff1 = 0;
+            diff2 = abs(end2 - start2);
+        }
+        else
+        {
+            diff1 = abs(end1 - start1);
+            diff2 = 0;
+        }
+        if (diff1 == diff2)
+        {
+            headlist.push_back(make_tuple('c', make_pair(start1, end1), make_pair(start2, end2)));
+        }
+        else if (diff1 < diff2)
+        {
+            if (diff1 != 0)
+            {
+                headlist.push_back(make_tuple('c', make_pair(start1, end1), make_pair(start2, start2+diff1)));
+            }
+            headlist.push_back(make_tuple('a', make_pair(end1, -1), make_pair(start2+diff1+1, end2)));
+        }
+        else
+        {
+            if (diff2 != 0)
+            {
+                headlist.push_back(make_tuple('c', make_pair(start1, start1+diff2), make_pair(start2, end2)));
+            }
+            headlist.push_back(make_tuple('d', make_pair(start1+diff1+1, end1), make_pair(end2, -1)));
+        }
+    }
+    for (int i = 0; i < (int)(headlist.size()); i++)
+    {
+        type = get<0>(headlist[i]);
+        start1 = get<1>(headlist[i]).first;
+        end1 = get<1>(headlist[i]).second;
+        start2 = get<2>(headlist[i]).first;
+        end2 = get<2>(headlist[i]).second;
+        printf("%i,%i%c%i,%i\n", start1, end1, type, start2, end2); 
     }
 }
 
