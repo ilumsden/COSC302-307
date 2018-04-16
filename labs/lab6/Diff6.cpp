@@ -1,3 +1,4 @@
+#include <climits>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -158,24 +159,24 @@ void LCS::compute_alignment()
             }
             else
             {
+                costs[i][j] = INT_MAX;
                 int add_cost = op_cost(i, j);
                 if (add_cost == 0)
                 {
                     costs[i][j] = costs[i-1][j-1];
                     link[i][j] = MATCH;
-                    continue;
                 }
-                int delcost = costs[i-1][j] + add_cost;
-                int inscost = costs[i][j-1] + add_cost;
-                if (delcost <= inscost)
-                {
-                    costs[i][j] = delcost;
-                    link[i][j] = DEL;
-                }
-                else
+                int delcost = costs[i-1][j] + 1;
+                int inscost = costs[i][j-1] + 1;
+                if (inscost < costs[i][j])
                 {
                     costs[i][j] = inscost;
-                    link[i][j] = INS; 
+                    link[i][j] = INS;
+                }
+                if (delcost < costs[i][j])
+                {
+                    costs[i][j] = delcost;
+                    link[i][j] = DEL; 
                 }
             }
         }
