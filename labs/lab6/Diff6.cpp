@@ -64,16 +64,14 @@ void matrix<T>::assign(int nr, int nc)
 class LCS 
 {
     public:
-        //LCS();
-        //~LCS();
         void text1_push_back(string fname);
         void text2_push_back(string fname);
         void compute_alignment();
-	    void report_difference();
-        void print_matrices();
+	void report_difference();
     private:
 	// support functions
         void report_difference(stack<edit_t>&, int i, int j);
+        void handle_match(vector< tuple< char, pair<int, int>, pair<int, int> > >&, const vector<char>&, int, int, int, int, int, int);
         void print_difference(stack<edit_t>&);
         int op_cost(int, int);
         vector<string> text1;
@@ -85,21 +83,7 @@ class LCS
          * 4 -> Match
          */
         matrix<int> link;
-        //const int DEF, INS, DEL, MATCH;
 };
-
-/*LCS::LCS()
-    : DEF(0)
-    , INS(1)
-    , DEL(2)
-    , MATCH(4)
-{}*/
-
-/*LCS::~LCS()
-{
-    delete costs;
-    delete link;
-}*/
 
 void LCS::text1_push_back(string fname)
 {
@@ -187,28 +171,6 @@ void LCS::compute_alignment()
     }
 }
 
-void LCS::print_matrices()
-{
-    for (int i = 0; i < costs.get_Nrows(); i++)
-    {
-        for (int j = 0; j < costs.get_Ncols(); j++)
-        {
-            cout << setw(2) << costs[i][j] << " ";
-        }
-        printf("\n");
-    }
-    printf("\n");
-    for (int i = 0; i < link.get_Nrows(); i++)
-    {
-        for (int j = 0; j < link.get_Ncols(); j++)
-        {
-            cout << setw(1) << link[i][j] << " ";
-        }
-        printf("\n");
-    }
-    printf("\n");
-}
-
 void LCS::report_difference()
 {
     stack<edit_t> moves;
@@ -231,159 +193,16 @@ void LCS::report_difference(stack<edit_t>& moves, int i, int j)
     return;
 }
 
-void LCS::print_difference(stack<edit_t>& moves)
+void LCS::handle_match(vector< tuple< char, pair<int, int>, pair<int, int> > >& headlist, const vector<char>& str1, int start1, int start2, int end1, int end2, int ind1, int ind2)
 {
-    vector<char> str1, str2;
-    edit_t op;
-    while (!moves.empty())
-    {
-        op = moves.top();
-        moves.pop();
-        if (op == Insert)
-        {
-            str1.push_back('-');
-            str2.push_back('I');
-        }
-        else if (op == Delete)
-        {
-            str1.push_back('D');
-            str2.push_back('-');
-        }
-        else
-        {
-            str1.push_back('M');
-            str2.push_back('M');
-        }
-    }
-    for (int i = 0; i < (int)(str1.size()); i++)
-    {
-        printf("%c ", str1[i]);
-    }
-    printf("\n");
-    for (int i = 0; i < (int)(str2.size()); i++)
-    {
-        printf("%c ", str2[i]);
-    }
-    printf("\n");
-    pair<int, int> range1, range2;
-    int ind1 = 0;
-    int ind2 = 0;
-    int start1 = -1;
-    int start2 = -1;
-    int end1 = -1;
-    int end2 = -1;
-    int tmp1, tmp2;
     char type;
-    vector< tuple<char, pair<int, int>, pair<int, int> > > headlist;
-    for (int i = 0; i < (int)(str1.size()); i++)
-    {
-        if (str1[i] == '-' && str2[i] == 'I')
-        {
-            ++ind2;
-            if (start2 == -1)
-            {
-                start2 = ind2;
-            }
-            else
-            {
-                end2 = ind2;
-            }
-        }
-        else if (str1[i] == 'D' && str2[i] == '-')
-        {
-            ++ind1;
-            printf("ind1 = %i ind2 = %i\n", ind1, ind2);
-            if (start1 == -1)
-            {
-                start1 = ind1;
-            }
-            else
-            {
-                end1 = ind1;
-            }
-        }
-        else
-        {
-            if (start1 == -1 && start2 == -1)
-            {
-                ;
-            }
-            else if (end1 == -1 && end2 == -1)
-            {
-                switch (str1[i-1])
-                {
-                    case '-': type = 'a'; break;
-                    case 'D': type = 'd'; break;
-                    case 'M': break;
-                    default: fprintf(stderr, "Internal Error: Invalid allignment type.\n"); exit(-4);
-                }
-                if (start1 == -1)
-                {
-                    start1 = ind1;
-                }
-                if (start2 == -1)
-                {
-                    start2 = ind2;
-                }
-                headlist.push_back(make_tuple(type, make_pair(start1, -1), make_pair(start2, -1)));
-            }
-            else
-            {
-                int diff1, diff2;
-                if (start1 != -1 && start2 != -1) 
-                {
-                    diff1 = abs(end1 - start1);
-                    diff2 = abs(end2 - start2);
-                }
-                else if (start1 == -1 && start2 != -1)
-                {
-                    diff1 = 0;
-                    diff2 = abs(end2 - start2);
-                }
-                else
-                {
-                    diff1 = abs(end1 - start1);
-                    diff2 = 0;
-                }
-                if (diff1 == diff2)
-                {
-                    headlist.push_back(make_tuple('c', make_pair(start1, end1), make_pair(start2, end2)));
-                }
-                else if (diff1 < diff2)
-                {
-                    if (diff1 != 0)
-                    {
-                        headlist.push_back(make_tuple('c', make_pair(start1, end1), make_pair(start2, start2+diff1)));
-                    }
-                    headlist.push_back(make_tuple('a', make_pair(end1, -1), make_pair(start2+diff1+1, end2)));
-                }
-                else
-                {
-                    if (diff2 != 0)
-                    {
-                        headlist.push_back(make_tuple('c', make_pair(start1, start1+diff2), make_pair(start2, end2)));
-                    }
-                    headlist.push_back(make_tuple('d', make_pair(start1+diff1+1, end1), make_pair(end2, -1)));
-                }
-            }
-            tmp1 = end1;
-            tmp2 = end2;
-            start1 = -1;
-            end1 = -1;
-            start2 = -1;
-            end2 = -1;
-            ++ind1;
-            ++ind2;
-        }
-    }
-    printf("ind1 = %i ind2 = %i\n", ind1, ind2);
     if (start1 == -1 && start2 == -1)
     {
         ;
     }
     else if (end1 == -1 && end2 == -1)
     {
-        switch (str1[str1.size()-1])
+        switch (str1[ind1])
         {
             case '-': type = 'a'; break;
             case 'D': type = 'd'; break;
@@ -427,18 +246,98 @@ void LCS::print_difference(stack<edit_t>& moves)
             if (diff1 != 0)
             {
                 headlist.push_back(make_tuple('c', make_pair(start1, end1), make_pair(start2, start2+diff1)));
+                headlist.push_back(make_tuple('a', make_pair(end1, -1), make_pair(start2+diff1+1, end2)));
             }
-            headlist.push_back(make_tuple('a', make_pair(end1, -1), make_pair(start2+diff1+1, end2)));
+            else
+            {
+                headlist.push_back(make_tuple('a', make_pair(ind1, -1), make_pair(start2, end2))); 
+            }
         }
         else
         {
             if (diff2 != 0)
             {
                 headlist.push_back(make_tuple('c', make_pair(start1, start1+diff2), make_pair(start2, end2)));
+                headlist.push_back(make_tuple('d', make_pair(start1+diff1+1, end1), make_pair(end2, -1)));
             }
-            headlist.push_back(make_tuple('d', make_pair(start1+diff1+1, end1), make_pair(end2, -1)));
+            else
+            {
+                headlist.push_back(make_tuple('d', make_pair(start1, end1), make_pair(ind2, -1)));
+            }
         }
     }
+}
+
+void LCS::print_difference(stack<edit_t>& moves)
+{
+    vector<char> str1, str2;
+    edit_t op;
+    while (!moves.empty())
+    {
+        op = moves.top();
+        moves.pop();
+        if (op == Insert)
+        {
+            str1.push_back('-');
+            str2.push_back('I');
+        }
+        else if (op == Delete)
+        {
+            str1.push_back('D');
+            str2.push_back('-');
+        }
+        else
+        {
+            str1.push_back('M');
+            str2.push_back('M');
+        }
+    }
+    int ind1 = 0;
+    int ind2 = 0;
+    int start1 = -1;
+    int start2 = -1;
+    int end1 = -1;
+    int end2 = -1;
+    vector< tuple<char, pair<int, int>, pair<int, int> > > headlist;
+    for (int i = 0; i < (int)(str1.size()); i++)
+    {
+        if (str1[i] == '-' && str2[i] == 'I')
+        {
+            ++ind2;
+            if (start2 == -1)
+            {
+                start2 = ind2;
+            }
+            else
+            {
+                end2 = ind2;
+            }
+        }
+        else if (str1[i] == 'D' && str2[i] == '-')
+        {
+            ++ind1;
+            if (start1 == -1)
+            {
+                start1 = ind1;
+            }
+            else
+            {
+                end1 = ind1;
+            }
+        }
+        else
+        {
+            handle_match(headlist, str1, start1, start2, end1, end2, ind1, ind2);
+            start1 = -1;
+            end1 = -1;
+            start2 = -1;
+            end2 = -1;
+            ++ind1;
+            ++ind2;
+        }
+    }
+    handle_match(headlist, str1, start1, start2, end1, end2, ind1, ind2);
+    char type;
     for (int i = 0; i < (int)(headlist.size()); i++)
     {
         type = get<0>(headlist[i]);
@@ -446,7 +345,51 @@ void LCS::print_difference(stack<edit_t>& moves)
         end1 = get<1>(headlist[i]).second;
         start2 = get<2>(headlist[i]).first;
         end2 = get<2>(headlist[i]).second;
-        printf("%i,%i%c%i,%i\n", start1, end1, type, start2, end2); 
+        if (type == 'a')
+        {
+            if (end2 == -1)
+            {
+                printf("%ia%i\n", start1, start2);
+                end2 = start2;
+            }
+            else
+            {
+                printf("%ia%i,%i\n", start1, start2, end2);
+            }
+            for (int i = start2 - 1; i < end2; i++)
+            {
+                printf("> %s\n", text2[i].c_str());
+            }
+        }
+        else if (type == 'd')
+        {
+            if (end1 == -1)
+            {
+                printf("%id%i\n", start1, start2);
+                end1 = start1;
+            }
+            else
+            {
+                printf("%i,%id%i\n", start1, end1, start2);
+            }
+            for (int i = start1 - 1; i < end1; i++)
+            {
+                printf("< %s\n", text1[i].c_str());
+            }
+        }
+        else
+        {
+            printf("%i,%ic%i,%i\n", start1, end1, start2, end2); 
+            for (int i = start1 - 1; i < end1; i++)
+            {
+                printf("< %s\n", text1[i].c_str());
+            }
+            printf("---\n");
+            for (int j = start2 - 1; j < end2; j++)
+            {
+                printf("> %s\n", text2[j].c_str());
+            }
+        }
     }
 }
 
@@ -460,6 +403,5 @@ int main(int argc, char **argv)
     lcs.text2_push_back(argv[2]);
 
     lcs.compute_alignment();
-    //lcs.print_matrices();
     lcs.report_difference();
 }
