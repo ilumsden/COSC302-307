@@ -9,9 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include <iostream>
-#include <iomanip>
-
 using namespace std;
 
 enum edit_t
@@ -395,10 +392,19 @@ void LCS::print_difference(stack<edit_t>& moves)
 
 int main(int argc, char **argv)
 {
-    // check two input files are specified on command line
-
-    LCS lcs;  // instantiate your "lcs based diff" object
-
+    if (argc < 3)
+    {
+        fprintf(stderr, "Usage: ./Diff6 original.txt modified.txt\n");
+        exit(-5);
+    }
+    string f1 = argv[1];
+    string f2 = argv[2];
+    if (f1.substr(f1.size() - 4, 4) != ".txt" || f2.substr(f2.size() -4, 4) != ".txt")
+    {
+        fprintf(stderr, "Usage: ./Diff6 original.txt modified.txt\n");
+        exit(-6);
+    }
+    LCS lcs;
     lcs.text1_push_back(argv[1]);
     lcs.text2_push_back(argv[2]);
 
