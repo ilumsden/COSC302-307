@@ -55,9 +55,10 @@ class student : public person
         virtual void print_details(ostream&) override;
         virtual void print_courses(ostream&) override;
     private:
+        int course_width();
+        double calc_gpa();
         student_enum stype;
-        vector<string> courses;
-        vector<int> gp;
+        map<string, int> courses;
 };
 
 #endif
