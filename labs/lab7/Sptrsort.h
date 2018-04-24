@@ -13,16 +13,21 @@ class sptr
 };
 
 template <typename T>
-void sptrsort(std::vector<T *> &A) 
+void sptrsort(typename std::vector<T*>::iterator start, typename std::vector<T*>::iterator end) 
 {
     std::vector< sptr<T> > sa;
-    for (int i = 0; i < (int)(A.size()); i++)
+    typename std::vector<T*>::iterator tmp = start;
+    while (tmp != end)
     {
-        sa.push_back(sptr(A[i]));
+        sa.push_back(sptr<T>(*tmp));
+        ++tmp;
     }
     std::sort(sa.begin(), sa.end());
-    for (int i = 0; i < (int)(sa.size()); i++)
+    typename std::vector< sptr<T> >::iterator ptr_start = sa.begin();
+    while (start != end && ptr_start != sa.end())
     {
-        A[i] = *sa[i];
+        *start = (*ptr_start);
+        ++start;
+        ++ptr_start;
     }
 }

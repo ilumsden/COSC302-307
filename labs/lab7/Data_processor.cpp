@@ -1,13 +1,15 @@
-#include WHAT'S NEEDED
+#include <fstream>
+#include <sstream>
+
 using namespace std;
 
 #include "Person.h"
 #include "Sptrsort.h"
 
 int main(int argc, char *argv[]) {
-  if (argc/argv problem) {
-    output error message
-	return 0;
+  if (argc != 2 || string(argv[1]).substr(string(argv[1]).size()-4, 4) != ".xml") {
+      fprintf(stderr, "Usage: ./Data_processor data.xml\n");
+      return -3;
   }
 
   person *n_person;
@@ -16,14 +18,24 @@ int main(int argc, char *argv[]) {
   person_enum person_type = UNKNOWN;
 
   int line = 0;
+  int width = -1;
   size_t iL, iR;
   string input;
   string name;
   string category;
+  double new_gp;
   vector<string> course;
-  vector<float> gp;
+  vector<double> gp;
 
-  while (getline(cin, input)) {
+  fstream fin;
+  fin.open(argv[1], ios::in);
+  if (!fin.is_open())
+  {
+      fprintf(stderr, "Could not open %s\n", argv[1]);
+      return -4;
+  }
+
+  while (getline(fin, input)) {
 	line++;
 
 	if ((iL = input.find('<')) == string::npos) {
@@ -35,17 +47,17 @@ int main(int argc, char *argv[]) {
 	  gp.clear();
 
 	} else if (input.compare(iL,10,"</faculty>") == 0) {
-	  faculty_type_e faculty_type;
+	  faculty_enum faculty_type;
 
 	  if (category.compare("Assistant Professor") == 0)
-	    faculty_type = ASST;
+	    faculty_type = ASST_PROF;
 	  else if (category.compare("Associate Professor") == 0)
-	    faculty_type = ASSOC;
+	    faculty_type = ASSOC_PROF;
 	  else if (category.compare("Full Professor") == 0)
-	    faculty_type = FULL;
+	    faculty_type = FULL_PROF;
 
-	  CODE FOR ADDING FACULTY PERSON TO DATABASE
-	  n_person = ?
+	  //CODE FOR ADDING FACULTY PERSON TO DATABASE
+	  n_person = new faculty(name, faculty_type, course); 
 
 	  person_list.push_back(n_person);
 
@@ -58,7 +70,7 @@ int main(int argc, char *argv[]) {
 	  gp.clear();
 
 	} else if (input.compare(iL,10,"</student>") == 0) {
-	  student_type_e student_type;
+	  student_enum student_type;
 
 	  if (category.compare("Freshman") == 0)
 	    student_type = FRESHMAN;
@@ -69,8 +81,8 @@ int main(int argc, char *argv[]) {
 	  else if (category.compare("Senior") == 0)
 	    student_type = SENIOR;
 
-	  CODE FOR ADDING STUDENT PERSON TO DATABASE
-	  n_person = ?
+	  //CODE FOR ADDING STUDENT PERSON TO DATABASE
+	  n_person = new student(name, student_type, course, gp);
 
 	  person_list.push_back(n_person);
 
@@ -91,6 +103,10 @@ int main(int argc, char *argv[]) {
 	  iL = input.find("=\"", iL);
 	  iR = input.find("\"", iL+2);
 	  course.push_back(input.substr(iL+2,iR-(iL+2)));
+          if ((int)(input.substr(iL+2,iR-(iL+2)).size()) > width)
+          {
+              width = (int)(input.substr(iL+2,iR-(iL+2)).size());
+          }
 
 	  iL = iR;
 	  if (person_type == FACULTY) {
@@ -106,14 +122,54 @@ int main(int argc, char *argv[]) {
 	  }
 	}
   }
+  fin.close();
 
-  // MODIFY TO INFINITE LOOP ASKING FOR PERSON,
-  // FACULTY OR STUDENT MODE FOR SORTING
+  for (person* p : person_list)
+  {
+      p->set_course_width(width);
+  }
 
-  sptrsort(person_list.begin(), person_list.end());
+  sptrsort<person>(person_list.begin(), person_list.end());
+  printf("command: person\ncommand: faculty\ncommand: student\n\n");
+  printf("command> ");
+  string type;
+  while (cin >> type)
+  {
+      if (type == "person")
+      {
+          for (int i=0; i<(int)person_list.size(); i++)
+            cout << *person_list[i] << "\n";
+      }
+      else if (type == "faculty")
+      {
+          for (int i=0; i<(int)person_list.size(); i++)
+          {
+              faculty *fac = dynamic_cast<faculty*>(person_list[i]);
+              if (fac)
+              {
+                  cout << *fac << "\n";
+              }
+          }
+      }
+      else
+      {
+          for (int i=0; i<(int)person_list.size(); i++)
+          {
+              student *stu = dynamic_cast<student*>(person_list[i]);
+              if (stu)
+              {
+                  cout << *stu << "\n";
+              }
+          }
+      }
+      printf("\ncommand> ");
+  }
+  printf("\n");
 
-  for (int i=0; i<(int)person_list.size(); i++)
-    cout << *person_list[i] << "\n";
-
-  // RELEASE DYNAMICALLY ALLOACTED MEMORY
+  for (int i = 0; i < (int)(person_list.size()); i++)
+  {
+      n_person = person_list.back();
+      person_list.pop_back();
+      delete n_person;
+  }
 }
