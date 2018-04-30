@@ -6,18 +6,44 @@ using namespace std;
 #include "Person.h"
 #include "Sptrsort.h"
 
+/*
+ * Data_processor.cpp
+ * Author: Ian Lumsden
+ * Date: 4/30/18
+ *
+ * The driver code for this lab.
+ * This file contains the main function for this lab. It manages the
+ * command line arguments. Then, it parses the XML file specifed by
+ * argv[1] into a vector of person objects. These person objects are
+ * actually either faculty or student objects (derrived classes) that
+ * are upcasted to person objects. Then, the program waits for user
+ * input to specify what data it will print to the console. After 
+ * stdin is closed, the code frees the memory used by the pointers
+ * stored in the person vector.
+ */
+
 int main(int argc, char *argv[]) {
+  /* If the wrong number of command line arguments are passed or if
+   * argv[1] is not the name of an XML file, an error message is
+   * printed to stderr, and the program exits.
+   */
   if (argc != 2 || string(argv[1]).substr(string(argv[1]).size()-4, 4) != ".xml") {
       fprintf(stderr, "Usage: ./Data_processor data.xml\n");
       return -3;
   }
 
+  /* Most of this code was provided by Dr. Gregor.
+   * As a result, the only parts that will be commented are the
+   * parts that I have written. There is another comment farther
+   * below that specifies when the provided code has ended.
+   */
   person *n_person;
   vector<person *> person_list;
 
   person_enum person_type = UNKNOWN;
 
   int line = 0;
+  // width stores the length of the longest course name.
   int width = -1;
   size_t iL, iR;
   string input;
@@ -27,6 +53,12 @@ int main(int argc, char *argv[]) {
   vector<string> course;
   vector<double> gp;
 
+  /* This code was added to fix a mistake in the provided code
+   * where the data was wrongly assumed to be passed through stdin.
+   * It opens a file stream in input mode using the file name passed
+   * as argv[1]. It prints an error message to stderr if the file
+   * could not be openned. Then, it exits.
+   */
   fstream fin;
   fin.open(argv[1], ios::in);
   if (!fin.is_open())
@@ -56,10 +88,12 @@ int main(int argc, char *argv[]) {
 	  else if (category.compare("Full Professor") == 0)
 	    faculty_type = FULL_PROF;
 
-	  //CODE FOR ADDING FACULTY PERSON TO DATABASE
+	  /* Makes a new faculty object using `name`, `faculty_type`,
+       * and `course`. This object is immediately upcasted and added
+       * to the person_list vector.
+       */
 	  n_person = new faculty(name, faculty_type, course); 
-
-	  person_list.push_back(n_person);
+      person_list.push_back(n_person);
 
 	  person_type = UNKNOWN;
 	  continue;
@@ -81,10 +115,12 @@ int main(int argc, char *argv[]) {
 	  else if (category.compare("Senior") == 0)
 	    student_type = SENIOR;
 
-	  //CODE FOR ADDING STUDENT PERSON TO DATABASE
+	  /* Makes a new student object using `name`, `student_type`,
+       * `course`, and `gp`. This object is immediately upcasted and added
+       * to the person_list vector.
+       */
 	  n_person = new student(name, student_type, course, gp);
-
-	  person_list.push_back(n_person);
+      person_list.push_back(n_person);
 
 	  person_type = UNKNOWN;
 	  continue;
@@ -122,24 +158,41 @@ int main(int argc, char *argv[]) {
 	  }
 	}
   }
+  // THIS IS THE END OF THE PROVIDED CODE
+  // Closes the file stream to prevent data loss.
   fin.close();
 
+  // Sets the width member of each person object.
   for (person* p : person_list)
   {
       p->set_course_width(width);
   }
 
+  /* Sorts the person_list vector using the 
+   * smart pointer sort from Sptrsort.h
+   */
   sptrsort<person>(person_list.begin(), person_list.end());
+  // Prints the command options to stdout.
   printf("command: person\ncommand: faculty\ncommand: student\n\n");
+  // Prints the command prompt
   printf("command> ");
   string type;
+  // This loop continues until stdin is closed.
   while (cin >> type)
   {
+      /* If the "person" command was enterred, prints
+       * the entire contents of the person_list vector
+       * to stdout.
+       */
       if (type == "person")
       {
           for (int i=0; i<(int)person_list.size(); i++)
             cout << *person_list[i] << "\n";
       }
+      /* If the "faculty" command was enterred, prints all the
+       * elements of the person_list vector that can be downcasted
+       * to faculty objects.
+       */
       else if (type == "faculty")
       {
           for (int i=0; i<(int)person_list.size(); i++)
@@ -151,6 +204,10 @@ int main(int argc, char *argv[]) {
               }
           }
       }
+      /* If the "student command was enterred, prints all the
+       * elements of the person_list vector that can be downcasted
+       * to faculty objects.
+       */
       else if (type == "student")
       {
           for (int i=0; i<(int)person_list.size(); i++)
@@ -162,10 +219,12 @@ int main(int argc, char *argv[]) {
               }
           }
       }
+      // Prints another command prompt
       printf("command> ");
   }
   printf("\n");
 
+  // Frees up the memory taken up by the elements in person_list
   for (int i = 0; i < (int)(person_list.size()); i++)
   {
       n_person = person_list.back();
