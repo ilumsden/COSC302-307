@@ -151,7 +151,7 @@ int main(int argc, char *argv[]) {
               }
           }
       }
-      else
+      else if (type == "student")
       {
           for (int i=0; i<(int)person_list.size(); i++)
           {
@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
               }
           }
       }
-      printf("\ncommand> ");
+      printf("command> ");
   }
   printf("\n");
 
